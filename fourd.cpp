@@ -1,4 +1,3 @@
-
 #include "gmtl/Vec.h"
 #include "gmtl/VecOps.h"
 #include "gmtl/gmtl.h"
@@ -10,38 +9,87 @@
 #include <sstream>
 #include <ctime>
 
+#include <emscripten/bind.h>
+
 using namespace std;
 using namespace gmtl;
+using namespace emscripten;
 
 class Settings{
   public:
-    Settings(float _repulsion, float _epsilon, float _inner_distance, float _attraction, float _friction, float _gravity, float _min_start_pos, float _max_start_pos){
+    Settings(
+      float _repulsion, 
+      float _epsilon, 
+      float _inner_distance, 
+      float _attraction, 
+      float _friction, 
+      float _gravity){
+
       repulsion = _repulsion;
       epsilon = _epsilon;
       inner_distance = _inner_distance;
       attraction = _attraction;
       friction = _friction;
       gravity = _gravity;
-      
-      min_start_pos = _min_start_pos;
-      max_start_pos = _max_start_pos;
     }
-  
+
+    float get_repulsion() const {
+      return repulsion;
+    }
+
+    void set_repulsion(float val){
+      repulsion = val;
+    }
+
+    float get_epsilon() const {
+      return epsilon;
+    }
+
+    void set_epsilon(float val){
+      epsilon = val;
+    }
+
+    float get_inner_distance() const {
+      return inner_distance;
+    };
+
+    void set_inner_distance(float val){
+      inner_distance = val;
+    }
+
+    float get_attraction() const {
+      return attraction;
+    }
+
+    void set_attraction(float val){
+      attraction = val;
+    }
+
+    float get_friction() const {
+      return friction;
+    }
+
+    void set_friction(float val){
+      friction = val;
+    }
+
+    float get_gravity() const {
+      return gravity;
+    }
+
+    void set_gravity(float val){
+      gravity = val;
+    }
+
     float repulsion;
     float epsilon;
     float inner_distance;
     float attraction;
     float friction;
     float gravity;
-    float min_start_pos;
-    float max_start_pos;
 };
 
 class Randomator {
-  private:
-    float min;
-    float max;
-
   public:
     Randomator(){
       srand(time(NULL));
@@ -52,6 +100,8 @@ class Randomator {
     }
 };
 
+class Edge;
+
 class Vertex {
   public:
   
@@ -60,6 +110,7 @@ class Vertex {
       position = gmtl::Vec3f(ra.get(), ra.get(), ra.get());
       
       id = vertex_id;
+
     }
 
     int id;
@@ -69,6 +120,8 @@ class Vertex {
   
     gmtl::Vec3f repulsion_forces;
     gmtl::Vec3f attraction_forces;
+
+    vector<Edge*> edges;
   
     static gmtl::Vec3f pairwise_repulsion(const gmtl::Vec3f& one, const gmtl::Vec3f& other, const Settings& settings){
       gmtl::Vec3f diff = one - other;
@@ -77,6 +130,18 @@ class Vertex {
       return  (settings.repulsion / 
                ((settings.epsilon + abs_diff)*(settings.epsilon + abs_diff)) * 
                (diff / abs_diff));
+    }
+
+    float get_x() const {
+      return position[0];
+    }
+
+    float get_y() const {
+      return position[1];
+    }
+
+    float get_z() const {
+      return position[2];
     }
   
     bool operator==(const Vertex& other){
@@ -95,7 +160,11 @@ class Edge {
   public:
     Edge(int edge_id, Vertex* _source, Vertex* _target){
       source = _source;
+      source->edges.push_back(this);
+
       target = _target;
+      target->edges.push_back(this);
+
       id = edge_id;
     };
 
@@ -112,6 +181,11 @@ class Edge {
   
     bool operator==(const Edge& other){
       return id == other.id;
+    }
+
+    ~Edge(){
+      source->edges.erase(find(source->edges.begin(), source->edges.end(), this));
+      target->edges.erase(find(target->edges.begin(), target->edges.end(), this));
     }
 };
 
@@ -171,16 +245,16 @@ class BarnesHutNode3 {
     }
   
     void estimate(Vertex& vertex, gmtl::Vec3f& force, gmtl::Vec3f (*force_fn)(const gmtl::Vec3f& p1, const gmtl::Vec3f& p2, const Settings& settings), const Settings& settings){
-      if(find(this->inners.begin(), this->inners.end(), vertex) != this->inners.end()){ // todo: make better, maintain a set or something
+      gmtl::Vec3f f;
+      if(find(this->inners.begin(), this->inners.end(), vertex) != this->inners.end()){
         for(auto i=0; i<this->inners.size(); i++){
           if(this->inners[i].id != vertex.id){
-            gmtl::Vec3f f = force_fn(vertex.position, this->inners[i].position, settings);
+            f = force_fn(vertex.position, this->inners[i].position, settings);
             force += f;
           }
         }
       }else{
-        gmtl::Vec3f f = force_fn(vertex.position, this->center(), settings) * (float)this->inners.size();
-        force += f;
+        force += force_fn(vertex.position, this->center(), settings) * (float)this->inners.size();
       }
       
       for(auto &it : this->outers){
@@ -200,16 +274,30 @@ class BarnesHutNode3 {
 class Graph {
   public:
     Graph(const Settings& _settings) : settings(_settings){
-      vertex_id = 0;
-      edge_id = 0;
+      vertex_id = -1;
+      edge_id = -1;
     };
   
-    void add_vertex(const Vertex& vertex){
+    int add_vertex(){
+      Vertex vertex(++vertex_id);
       V.push_back(vertex);
+      return vertex_id;
     }
   
-    void add_edge(const Edge& edge){
-      E.push_back(edge);
+    void add_edge(int source, int target){
+      Vertex* src;
+      Vertex* tgt;
+      
+      for(int i=0; i<V.size(); i++){
+        if(V[i].id == source){
+          src = &V[i];
+        }
+        if(V[i].id == target){
+          tgt = &V[i];
+        }
+      }
+
+      E.push_back(Edge(edge_id++, src, tgt));
     }
   
     void remove_vertex(Vertex vertex){
@@ -220,12 +308,6 @@ class Graph {
       E.erase(find(E.begin(), E.end(), edge));
     }
   
-    int vertex_id = 0;
-    int edge_id = 0;
-    vector<Vertex> V;
-    vector<Edge> E;
-    Settings settings;
-  
     void layout(){
       // calculate repulsions
       
@@ -233,6 +315,13 @@ class Graph {
       for(Vertex& vertex : this->V){
         tree.insert(vertex);
       }
+
+      gmtl::Vec3f sp;
+      gmtl::Vec3f tp;
+      float distance;
+      gmtl::Vec3f gravity;
+      gmtl::Vec3f attraction;
+
       for(Vertex& vertex : this->V){
         vertex.repulsion_forces = gmtl::Vec3f();
         tree.estimate(
@@ -240,32 +329,41 @@ class Graph {
           vertex.repulsion_forces,
           &Vertex::pairwise_repulsion, 
           settings);
-      }
-      
-      // calculate attractions 
-      for(Edge edge : this->E){
-        gmtl::Vec3f attraction = (edge.source->position - edge.target->position) * (-1 * settings.attraction);
-        if(edge.directed){
-          gmtl::Vec3f sp = edge.source->position;
-          gmtl::Vec3f tp = edge.target->position;
-          
-          float distance = sqrt((sp[0] - tp[0])*(sp[0] - tp[0]) + 
-                                      (sp[1] - tp[1])*(sp[1] - tp[1]) +
-                                      (sp[2] - tp[2])*(sp[2] - tp[2]));
-          gmtl::Vec3f gravity = gmtl::Vec3f(0.0f, settings.gravity/distance, 0.0f);
-          edge.source->attraction_forces -= attraction;
-          edge.target->attraction_forces += attraction;
+
+        for(Edge* edge : vertex.edges){
+
+          attraction = (vertex.position - edge->target->position) * (-1 * settings.attraction);
+          sp = vertex.position;
+          tp = edge->target->position;
+
+          distance = sqrt((sp[0] - tp[0])*(sp[0] - tp[0]) + 
+                          (sp[1] - tp[1])*(sp[1] - tp[1]) +
+                          (sp[2] - tp[2])*(sp[2] - tp[2]));
+
+          vertex.attraction_forces -= attraction;
+          edge->target->attraction_forces += attraction;
         }
       }
       
       // update vertices
+      gmtl::Vec3f friction;
       for(Vertex& vertex : this->V){
-        gmtl::Vec3f friction = vertex.velocity * settings.friction;
+        friction = vertex.velocity * settings.friction;
         vertex.acceleration += vertex.repulsion_forces - vertex.attraction_forces - friction;
         vertex.velocity += vertex.acceleration;
         vertex.position += vertex.velocity;
       }
     }
+
+    const Vertex* get_V() const {
+      return &(V[0]);
+    }
+
+    int vertex_id = 0;
+    int edge_id = 0;
+    vector<Vertex> V;
+    vector<Edge> E;
+    Settings settings;
 };
 
 
@@ -304,10 +402,15 @@ class Experiment {
       vector<gmtl::Vec3f> history;
       Graph h(settings);
       for(int i=0; i<vertices; i++){
-        h.add_vertex(Vertex(i));
+        h.add_vertex();
       }
       for(int i=0; i<edges; i++){
-        h.add_edge(Edge(i, &h.V[rand() % h.V.size()], &h.V[rand() % h.V.size()]));
+        int src = rand() % h.V.size();
+        int tgt = rand() % h.V.size();
+        while(src == tgt){
+          tgt = rand() % h.V.size();
+        }
+        h.add_edge(src, tgt);
       }
 
       for(int i=0; i<iterations; i++){
@@ -320,19 +423,56 @@ class Experiment {
     }
 };
 
+Settings default_settings(){
+  float _repulsion = 5.0;
+  float _epsilon = 0.1;
+  float _inner_distance = 0.36;
+  float _attraction = 0.0005;
+  float _friction = 0.60;
+  float _gravity = 10;
+
+  float _min_start_pos = -1.0f;
+  float _max_start_pos = 1.0f;
+
+  return Settings(
+    _repulsion, 
+    _epsilon, 
+    _inner_distance,
+    _attraction,
+    _friction,
+    _gravity
+  );
+};
+
+EMSCRIPTEN_BINDINGS(fourd){
+  emscripten::class_<Settings>("Settings")
+    .constructor<float, float, float, float, float, float>()
+    .property("repulsion", &Settings::get_repulsion, &Settings::set_repulsion)
+    .property("epsilon", &Settings::get_epsilon, &Settings::set_epsilon)
+    .property("inner_distance", &Settings::get_inner_distance, &Settings::set_inner_distance)
+    .property("attraction", &Settings::get_attraction, &Settings::set_attraction)
+    .property("friction", &Settings::get_friction, &Settings::set_friction)
+    .property("gravity", &Settings::get_gravity, &Settings::set_gravity);
+  emscripten::class_<Vertex>("Vertex")
+    .constructor<int>()
+    .property("x", &Vertex::get_x)
+    .property("y", &Vertex::get_y)
+    .property("z", &Vertex::get_z);
+  emscripten::class_<Graph>("Graph")
+    .constructor<Settings>()
+    .function("add_vertex", &Graph::add_vertex)
+    .function("add_edge", &Graph::add_edge)
+    .function("remove_vertex", &Graph::remove_vertex)
+    .function("remove_edge", &Graph::remove_edge)
+    .function("layout", &Graph::layout);
+  emscripten::function("default_settings", &default_settings);
+}
+
+/*
 class Main {
   public:
     static int run(int NUM_VERTICES, int NUM_EDGES){
-      cout << "Welcome to foud.cpp, the meat and bones of social cartography..." << endl;
-      float _repulsion = 5.0;
-      float _epsilon = 0.1;
-      float _inner_distance = 0.36;
-      float _attraction = 0.0005;
-      float _friction = 0.60;
-      float _gravity = 10;
-
-      float _min_start_pos = -1.0f;
-      float _max_start_pos = 1.0f;
+      cout << "Beginning experiment: " << endl;
 
       srand(time(NULL));
 
@@ -341,38 +481,27 @@ class Main {
       cout << "done." << endl;
 
       cout << "Creating Settings ... ";
-      Settings settings(
-        _repulsion, 
-        _epsilon, 
-        _inner_distance,
-        _attraction,
-        _friction,
-        _gravity,
-        _min_start_pos,
-        _max_start_pos
-      );
-      cout << "done." << endl;
-
       cout << "Creating graph ... ";
-      Graph graph(settings);
+      Graph graph(default_settings());
       cout << "done." << endl;
 
       cout << "Adding " << NUM_VERTICES << " vertices ... ";
       for(int i=0; i<NUM_VERTICES; i++){
-        graph.add_vertex(Vertex(i));
+        graph.add_vertex();
       }
       cout << "done." << endl;
 
       cout << "Adding " << NUM_EDGES << " edges ... ";
       for(int i=0; i<NUM_EDGES; i++){
-        Vertex source = graph.V[rand() % graph.V.size()];
-        Vertex temp = graph.V[rand() % graph.V.size()];
-        while(graph.V.size() && temp.id != source.id){
-          temp = graph.V[rand() % graph.V.size()];
+        int source = rand() % graph.V.size();
+        int target = rand() % graph.V.size();
+        while(graph.V.size() && target != source){
+          target = rand() % graph.V.size();
         }
-        Vertex target = temp;
-        Edge edge(graph.edge_id++, &source, &target);
-        graph.add_edge(edge);
+
+        if(target != source){
+          graph.add_edge(source, target);
+        }
       }
       cout << "done." << endl;
 
@@ -386,14 +515,23 @@ class Main {
 
       cout << NUM_VERTICES << " vertices and " << NUM_EDGES << " edges took " << std::chrono::duration_cast<std::chrono::milliseconds>(dur).count() << "ms" << endl;
       return 0;
+
+      auto start2 = std::chrono::high_resolution_clock::now();
+      for(int i=0; i<1000; i++){
+        graph.layout();
+      }
+      auto stop2 = std::chrono::high_resolution_clock::now();
     }
 };
+*/
 
+/*
 int main(int argc, char** argv){
-  int v = 1000;
-  int e = v*3;
+  cout << "Welcome to fourd.cpp, the meat and bones of social cartography..." << endl;
 
   for(auto v : {100, 1000, 2500, 5000, 7500, 10000}){
     Main::run(v, v*3);
   }
 }
+
+*/
