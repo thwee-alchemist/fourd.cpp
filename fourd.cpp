@@ -9,7 +9,9 @@
 #include <sstream>
 #include <ctime>
 
+#ifdef __EMSCRIPTEN__
 #include <emscripten/bind.h>
+#endif
 
 using namespace std;
 using namespace gmtl;
@@ -284,7 +286,7 @@ class Graph {
       return vertex_id;
     }
   
-    void add_edge(int source, int target){
+    int add_edge(int source, int target){
       Vertex* src;
       Vertex* tgt;
       
@@ -297,7 +299,8 @@ class Graph {
         }
       }
 
-      E.push_back(Edge(edge_id++, src, tgt));
+      E.push_back(Edge(++edge_id, src, tgt));
+      return edge_id;
     }
   
     void remove_vertex(Vertex vertex){
@@ -308,7 +311,7 @@ class Graph {
       E.erase(find(E.begin(), E.end(), edge));
     }
   
-    void layout(){
+    string layout(){
       // calculate repulsions
       
       BarnesHutNode3 tree(settings);
@@ -346,17 +349,33 @@ class Graph {
       }
       
       // update vertices
+      stringstream s;
       gmtl::Vec3f friction;
-      for(Vertex& vertex : this->V){
+
+      s << "[" << endl;
+      for(Vertex& vertex : V){
         friction = vertex.velocity * settings.friction;
         vertex.acceleration += vertex.repulsion_forces - vertex.attraction_forces - friction;
         vertex.velocity += vertex.acceleration;
         vertex.position += vertex.velocity;
+        s << "{\"x\":" << vertex.get_x() << ", \"y\":" << vertex.get_y() << ", \"z\":" << vertex.get_z() << "}";
+        if(!(vertex == V.back())){
+          s << ",";
+        }
+        s << endl;
       }
+
+      s << "]" << endl;
+
+      return s.str();
     }
 
-    const Vertex* get_V() const {
-      return &(V[0]);
+    Vertex get_v(int i) const {
+      return V[i];
+    }
+
+    long vertex_count() const{
+      return (long)V.size();
     }
 
     int vertex_id = 0;
@@ -424,7 +443,7 @@ class Experiment {
 };
 
 Settings default_settings(){
-  float _repulsion = 5.0;
+  float _repulsion = 0.5;
   float _epsilon = 0.1;
   float _inner_distance = 0.36;
   float _attraction = 0.0005;
@@ -443,6 +462,8 @@ Settings default_settings(){
     _gravity
   );
 };
+
+#ifdef __EMSCRIPTEN__
 
 EMSCRIPTEN_BINDINGS(fourd){
   emscripten::class_<Settings>("Settings")
@@ -464,9 +485,12 @@ EMSCRIPTEN_BINDINGS(fourd){
     .function("add_edge", &Graph::add_edge)
     .function("remove_vertex", &Graph::remove_vertex)
     .function("remove_edge", &Graph::remove_edge)
-    .function("layout", &Graph::layout);
+    .function("layout", &Graph::layout)
+    .property("vertex_count", &Graph::vertex_count)
+    .function("get_v", &Graph::get_v);
   emscripten::function("default_settings", &default_settings);
 }
+#endif
 
 /*
 class Main {
