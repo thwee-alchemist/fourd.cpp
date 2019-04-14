@@ -86,7 +86,7 @@
             max="10.0" 
             step=".1">
 
-          <label class="lbl form-label" for="friction">friction
+          <label class="lbl form-label" for="friction">Friction
               <output
                 name="friction"
                 value="fourd.graph.settings.friction"">
@@ -100,6 +100,22 @@
               type="range" 
               min="0.0" 
               max="1.0" 
+              step=".1">
+
+          <label class="lbl form-label" for="inner_distance">Inner Distance
+              <output
+                name="inner_distance"
+                value="fourd.graph.settings.inner_distance"">
+              </output>
+            </label>
+            <input 
+              class="range form-control" 
+              value="fourd.graph.settings.inner_distance" 
+              onchange="console.log(inner_distance.value = fourd.graph.settings.inner_distance = parseFloat(this.value));"
+              id="inner_distance" 
+              type="range" 
+              min="0.0" 
+              max="100.0" 
               step=".1">
           </form>
         </div>
@@ -126,7 +142,7 @@ Module.onRuntimeInitialized = _ => {
     Module.Graph
   );
 
-  options = {cube: {size: 1, color: 0x000000}};
+  options = {cube: {size: 10, color: 0xffffff}};
 
   console.log(graph.vertex_count);
 };

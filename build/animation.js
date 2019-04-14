@@ -497,21 +497,23 @@ FourD = function(selector, options, default_settings, CppGraph){
     }
 
     for(var i=0; i<positions.length; i++){
-      this.V[i].position.copy(positions[i]);
+      this.V[i].object.position.copy(positions[i]);
     };
 
     for(var i=0; i<this.E.length; i++){
       var geometry = this.E[i].object.gemoetry;
-      geometry.vertices[0].copy(this.E[i].source.position);
-      geometry.vertices[1].copy(this.E[i].target.position);
+      this.E[i].object.geometry.vertices[0].copy(this.E[i].source.object.position);
+      this.E[i].object.geometry.vertices[1].copy(this.E[i].target.object.position);
+      this.E[i].object.dynamic = true;
+      this.E[i].object.matrixAutoUpdate  = true;
 
-      geometry.verticesNeedUpdate = true;
-      geometry.elementsNeedUpdate = true;
-      geometry.morphTargetsNeedUpdate = true;
-      geometry.uvsNeedUpdate = true;
-      geometry.normalsNeedUpdate = true;
-      geometry.colorsNeedUpdate = true;
-      geometry.tangentsNeedUpdate = true;
+      this.E[i].object.geometry.verticesNeedUpdate = true;
+      this.E[i].object.geometry.elementsNeedUpdate = true;
+      this.E[i].object.geometry.morphTargetsNeedUpdate = true;
+      this.E[i].object.geometry.uvsNeedUpdate = true;
+      this.E[i].object.geometry.normalsNeedUpdate = true;
+      this.E[i].object.geometry.colorsNeedUpdate = true;
+      this.E[i].object.geometry.tangentsNeedUpdate = true;
     }
   };
 	
