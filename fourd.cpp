@@ -15,7 +15,7 @@
 
 using namespace std;
 using namespace gmtl;
-using namespace emscripten;
+
 
 class Settings{
   public:
@@ -125,12 +125,12 @@ class Vertex {
 
     vector<Edge*> edges;
   
-    static gmtl::Vec3f pairwise_repulsion(const gmtl::Vec3f& one, const gmtl::Vec3f& other, const Settings& settings){
+    static gmtl::Vec3f pairwise_repulsion(const gmtl::Vec3f& one, const gmtl::Vec3f& other, Settings* settings){
       gmtl::Vec3f diff = one - other;
       // gmtl::Vec3f diff = *(this->position) - *(other->position);
       float abs_diff = length(diff);
-      return  (settings.repulsion / 
-               ((settings.epsilon + abs_diff)*(settings.epsilon + abs_diff)) * 
+      return  (settings->repulsion / 
+               ((settings->epsilon + abs_diff)*(settings->epsilon + abs_diff)) * 
                (diff / abs_diff));
     }
 
@@ -160,12 +160,14 @@ class Vertex {
 
 class Edge {
   public:
-    Edge(int edge_id, Vertex* _source, Vertex* _target){
+    Edge(int edge_id, Vertex* _source, Vertex* _target, bool _directed=false){
       source = _source;
       source->edges.push_back(this);
 
       target = _target;
       target->edges.push_back(this);
+
+      directed = _directed;
 
       id = edge_id;
     };
@@ -173,7 +175,7 @@ class Edge {
     int id;
     Vertex* source;
     Vertex* target;
-    bool directed = false;
+    bool directed;
   
     string toString(){
       stringstream ss;
@@ -191,16 +193,32 @@ class Edge {
     }
 };
 
+
+/*
+  Barnes Hut Node 3
+
+  This is a 3 dimensional Barnes Hut Tree. One node segments the space
+  around it into inner and outer, one vector for everything closer than 
+  settings->inner_distance, and up to 2^3 directions/octants in the outer 
+  map.  
+*/
 class BarnesHutNode3 {
   public:
     vector<Vertex> inners; // should probably be a pointer
     map<string, BarnesHutNode3*> outers;
     gmtl::Vec3f center_sum;
     int count;
-    Settings settings;
+    Settings* settings;
 
-    BarnesHutNode3(const Settings& _settings) : settings(_settings){
+    BarnesHutNode3(Settings* _settings){
       count = 0;
+      settings = _settings;
+    }
+
+    ~BarnesHutNode3(){
+      for(auto outer : outers){
+        delete outer.second;
+      }
     }
   
     gmtl::Vec3f center(){
@@ -228,7 +246,7 @@ class BarnesHutNode3 {
                              (center[1] - pos[1])*(center[1] - pos[1]) +
                              (center[2] - pos[2])*(center[2] - pos[2]));
         
-        if(distance <= settings.inner_distance){
+        if(distance <= settings->inner_distance){
           this->place_inner(vertex);
         }else{
           this->place_outer(vertex);
@@ -246,7 +264,7 @@ class BarnesHutNode3 {
       return x+y+z;
     }
   
-    void estimate(Vertex& vertex, gmtl::Vec3f& force, gmtl::Vec3f (*force_fn)(const gmtl::Vec3f& p1, const gmtl::Vec3f& p2, const Settings& settings), const Settings& settings){
+    void estimate(Vertex& vertex, gmtl::Vec3f& force, gmtl::Vec3f (*force_fn)(const gmtl::Vec3f& p1, const gmtl::Vec3f& p2, Settings* settings), Settings* settings){
       gmtl::Vec3f f;
       if(find(this->inners.begin(), this->inners.end(), vertex) != this->inners.end()){
         for(auto i=0; i<this->inners.size(); i++){
@@ -275,9 +293,10 @@ class BarnesHutNode3 {
 
 class Graph {
   public:
-    Graph(const Settings& _settings) : settings(_settings){
+    Graph(Settings* _settings){
       vertex_id = -1;
       edge_id = -1;
+      settings = _settings;
     };
   
     int add_vertex(){
@@ -286,7 +305,7 @@ class Graph {
       return vertex_id;
     }
   
-    int add_edge(int source, int target){
+    int add_edge(int source, int target, bool directed){
       Vertex* src;
       Vertex* tgt;
       
@@ -299,7 +318,7 @@ class Graph {
         }
       }
 
-      E.push_back(Edge(++edge_id, src, tgt));
+      E.push_back(Edge(++edge_id, src, tgt, directed));
       return edge_id;
     }
   
@@ -316,36 +335,45 @@ class Graph {
       
       BarnesHutNode3 tree(settings);
       for(Vertex& vertex : this->V){
+        vertex.acceleration = gmtl::Vec3f();
+        vertex.repulsion_forces = gmtl::Vec3f();
+        vertex.attraction_forces = gmtl::Vec3f();
         tree.insert(vertex);
       }
-
-      gmtl::Vec3f sp;
-      gmtl::Vec3f tp;
+ 
+      gmtl::Vec3f sp; // source position
+      gmtl::Vec3f tp; // target position
       float distance;
       gmtl::Vec3f gravity;
       gmtl::Vec3f attraction;
 
+      // calculate repulsion
       for(Vertex& vertex : this->V){
-        vertex.repulsion_forces = gmtl::Vec3f();
         tree.estimate(
           vertex,
           vertex.repulsion_forces,
           &Vertex::pairwise_repulsion, 
           settings);
+      }
 
-        for(Edge* edge : vertex.edges){
+      // calculate attraction
+      for(Edge& edge : this->E){
+        attraction = (edge.source->position - edge.target->position) * (-1 * settings->attraction);
+        sp = edge.source->position;
+        tp = edge.target->position;
 
-          attraction = (vertex.position - edge->target->position) * (-1 * settings.attraction);
-          sp = vertex.position;
-          tp = edge->target->position;
+        distance = sqrt((sp[0] - tp[0])*(sp[0] - tp[0]) + 
+                        (sp[1] - tp[1])*(sp[1] - tp[1]) +
+                        (sp[2] - tp[2])*(sp[2] - tp[2]));
 
-          distance = sqrt((sp[0] - tp[0])*(sp[0] - tp[0]) + 
-                          (sp[1] - tp[1])*(sp[1] - tp[1]) +
-                          (sp[2] - tp[2])*(sp[2] - tp[2]));
-
-          vertex.attraction_forces -= attraction;
-          edge->target->attraction_forces += attraction;
+        if(edge.directed){
+          gmtl::Vec3f distance = edge.source->position - edge.target->position;
+          gmtl::Vec3f gravity(0, 0, settings->gravity);
+          attraction += gravity;
         }
+
+        edge.source->attraction_forces -= attraction;
+        edge.target->attraction_forces += attraction;
       }
       
       // update vertices
@@ -354,8 +382,8 @@ class Graph {
 
       s << "[" << endl;
       for(Vertex& vertex : V){
-        friction = vertex.velocity * settings.friction;
-        vertex.acceleration += vertex.repulsion_forces - vertex.attraction_forces - friction;
+        friction = vertex.velocity * settings->friction;
+        vertex.acceleration += (vertex.repulsion_forces - vertex.attraction_forces) - friction;
         vertex.velocity += vertex.acceleration;
         vertex.position += vertex.velocity;
         s << "{\"x\":" << vertex.get_x() << ", \"y\":" << vertex.get_y() << ", \"z\":" << vertex.get_z() << "}";
@@ -382,16 +410,16 @@ class Graph {
     int edge_id = 0;
     vector<Vertex> V;
     vector<Edge> E;
-    Settings settings;
+    Settings* settings;
 };
 
 
 gmtl::Vec3f avg_position(const Graph&);
-vector<gmtl::Vec3f> average_positions(int, int, int, const Settings&);
+vector<gmtl::Vec3f> average_positions(int, int, int, Settings*);
 
 class Experiment {
   public:
-    Experiment(float& _variable, const std::vector<float>& _values, const Settings& settings){
+    Experiment(float& _variable, const std::vector<float>& _values, Settings* settings){
       variable = &_variable;
       values = _values;
       
@@ -417,7 +445,7 @@ class Experiment {
       return position / (float)graph.V.size();
     }
 
-    static std::vector<gmtl::Vec3f> average_positions(int iterations, int vertices, int edges, const Settings& settings){
+    static std::vector<gmtl::Vec3f> average_positions(int iterations, int vertices, int edges, Settings* settings){
       vector<gmtl::Vec3f> history;
       Graph h(settings);
       for(int i=0; i<vertices; i++){
@@ -429,7 +457,7 @@ class Experiment {
         while(src == tgt){
           tgt = rand() % h.V.size();
         }
-        h.add_edge(src, tgt);
+        h.add_edge(src, tgt, false);
       }
 
       for(int i=0; i<iterations; i++){
@@ -442,18 +470,18 @@ class Experiment {
     }
 };
 
-Settings default_settings(){
-  float _repulsion = 0.5;
+Settings* default_settings(){
+  float _repulsion = 50.0;
   float _epsilon = 0.1;
   float _inner_distance = 0.36;
   float _attraction = 0.0005;
-  float _friction = 0.60;
+  float _friction = 0.1;
   float _gravity = 10;
 
   float _min_start_pos = -1.0f;
   float _max_start_pos = 1.0f;
 
-  return Settings(
+  return new Settings(
     _repulsion, 
     _epsilon, 
     _inner_distance,
@@ -464,6 +492,7 @@ Settings default_settings(){
 };
 
 #ifdef __EMSCRIPTEN__
+using namespace emscripten;
 
 EMSCRIPTEN_BINDINGS(fourd){
   emscripten::class_<Settings>("Settings")
@@ -480,7 +509,7 @@ EMSCRIPTEN_BINDINGS(fourd){
     .property("y", &Vertex::get_y)
     .property("z", &Vertex::get_z);
   emscripten::class_<Graph>("Graph")
-    .constructor<Settings>()
+    .constructor<Settings*>()
     .function("add_vertex", &Graph::add_vertex)
     .function("add_edge", &Graph::add_edge)
     .function("remove_vertex", &Graph::remove_vertex)
@@ -488,7 +517,7 @@ EMSCRIPTEN_BINDINGS(fourd){
     .function("layout", &Graph::layout)
     .property("vertex_count", &Graph::vertex_count)
     .function("get_v", &Graph::get_v);
-  emscripten::function("default_settings", &default_settings);
+  emscripten::function("default_settings", &default_settings, allow_raw_pointers());
 }
 #endif
 

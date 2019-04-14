@@ -206,9 +206,9 @@ FourD = function(selector, options, default_settings, CppGraph){
     for(var i=0; i<this.edges.length; i++){
       scene.remove(this.edges[i].object);
       if(this.edges[i].source == this){
-        this.edges[i].object = line(scene, this, this.edges[i].target, this.edges[i].options);
+        this.edges[i].object = line(scene, this.position, this.edges[i].target.position, this.edges[i].options);
       }else{
-        this.edges[i].object = line(scene, this.edges[i].source, this, this.edges[i].options)
+        this.edges[i].object = line(scene, this.edges[i].source.position, this.position, this.edges[i].options)
       }
     }
   }
@@ -223,7 +223,7 @@ FourD = function(selector, options, default_settings, CppGraph){
 	
   // Edge
   var Edge = function(id, source, target, options){
-    this.options = options === undefined ? {strength: 1.0} : options;
+    this.options = Object.assign({}, {directed: false, strength: 1.0}, options);
     
     if(arguments.length < 3){
       throw new Error('Edge without sufficent arguments');
@@ -247,10 +247,9 @@ FourD = function(selector, options, default_settings, CppGraph){
 
   Edge.prototype.paint = function(scene, options){
     options = options || {
-      color: 0xffffff,
-      paint: true
+      color: 0xffffff
     }
-    this.object = line(scene, this.source, this.target, options);
+    this.object = line(scene, this.source.object.position, this.target.object.position, options);
   };
 
   Edge.prototype.toString = function(){
@@ -288,15 +287,12 @@ FourD = function(selector, options, default_settings, CppGraph){
   Graph.prototype.random_edge = function(){
     var src = this.V[Math.floor(Math.random() * this.V.length)];
     var tgt = this.V[Math.floor(Math.random() * this.V.length)];
-    while(tgt == src){
-      tgt = graph.V[Math.floor(Math.random() * this.V.length)];
-    }
     console.assert(src, "src must not be undefined");
     console.assert(tgt, "tgt must not be undefined");
     console.assert(src !== tgt, "src and tgt should not be equal");
 
-    this.add_edge(src, tgt);
-  }
+    return this.add_edge(src, tgt, false);
+  };
 
 
   // api
@@ -351,7 +347,7 @@ FourD = function(selector, options, default_settings, CppGraph){
     var edge;
     
     if(!this.edge_counts.hasOwnProperty(key)){
-      edge = new Edge(this.g.add_edge(source.id, target.id), source, target, options);
+      edge = new Edge(this.g.add_edge(source.id, target.id, options.directed), source, target, options);
       this.E[edge.id] = edge;
       this.edge_counts[key] = 1;
     }else{
@@ -369,8 +365,8 @@ FourD = function(selector, options, default_settings, CppGraph){
     return edge;
   };
 	
-	Graph.prototype.add_invisible_edge = function(source, target){
-		return this.add_edge(source, target, {opacity: 0.0});
+	Graph.prototype.add_invisible_edge = function(source, targe, optionst){
+		return this.add_edge(source, target, Object.assign(options, {opacity: 0.0}));
 	}
 
   // api
@@ -467,18 +463,20 @@ FourD = function(selector, options, default_settings, CppGraph){
 
   // apiish this will change
   // todo: make line options like cube options
-  var line = function(scene, source, target, options){
+  var line = function(source, source, target, options){
     var geometry = new THREE.Geometry();
     geometry.dynamic = true;
-    geometry.vertices.push(source.object.position);
-    geometry.vertices.push(target.object.position);
+
+    geometry.vertices.push(source);
+    geometry.vertices.push(target);
+
     geometry.verticesNeedUpdate = true;
-    
+
 		options = options || {};
 		options.color = options.color ? options.color : 0xffffff;
 		options.transparent = options.transparent ? options.transparent : false;
 		options.opacity = options.opacity ? options.opacity : 1.0;
-		
+        
     var material = new THREE.LineBasicMaterial(options);
     
     var line = new THREE.Line( geometry, material );
@@ -490,16 +488,34 @@ FourD = function(selector, options, default_settings, CppGraph){
   
   var edges = false;
   Graph.prototype.layout = function(){
-    var positions = JSON.parse(this.g.layout());
+    var pos_str = this.g.layout();
+
+    try{
+      positions = JSON.parse(pos_str);
+    }catch(e){
+      console.error(pos_str);
+    }
+
     for(var i=0; i<positions.length; i++){
-      this.V[i].object.position.x = positions[i].x;
-      this.V[i].object.position.y = positions[i].z;
-      this.V[i].object.position.z = positions[i].z;
+      this.V[i].position.copy(positions[i]);
     };
+
+    for(var i=0; i<this.E.length; i++){
+      var geometry = this.E[i].object.gemoetry;
+      geometry.vertices[0].copy(this.E[i].source.position);
+      geometry.vertices[1].copy(this.E[i].target.position);
+
+      geometry.verticesNeedUpdate = true;
+      geometry.elementsNeedUpdate = true;
+      geometry.morphTargetsNeedUpdate = true;
+      geometry.uvsNeedUpdate = true;
+      geometry.normalsNeedUpdate = true;
+      geometry.colorsNeedUpdate = true;
+      geometry.tangentsNeedUpdate = true;
+    }
   };
 	
-	Graph.prototype.add_cycle = function(vertex_options){
-		var vertices = [];
+	Graph.prototype.add_cycle = function(vertices){
 		var edges = [];
 		for(var i=0; i<vertex_options.length; i++){
 			vertices.push(this.add_vertex(vertex_options[i]));
@@ -507,7 +523,7 @@ FourD = function(selector, options, default_settings, CppGraph){
 				edges.push(this.add_edge(vertices[i-1], vertices[i]));
 			}
 		}
-		edges.push(this.add_edge(vertices[0], vertices[vertices.length-1]));
+		edges.push(this.add_edge(vertices[0], vertices[vertices.length-1]), false);
 		
 		return {
 			vertices: vertices,
