@@ -44,7 +44,6 @@ FourD = function(selector, options, default_settings, CppGraph){
     };
 
     this.edge_count = 0;
-    this.edges = {};
     
     if(!this.options.hasOwnProperty('label')){
       this.options.label = {
@@ -199,20 +198,6 @@ FourD = function(selector, options, default_settings, CppGraph){
     this.object.remove(name);
   }
   
-  Vertex.prototype.replace_cube = function(options){
-    this.options = options;
-    scene.remove(this.object);
-    this.paint(scene);
-    for(var i=0; i<this.edges.length; i++){
-      scene.remove(this.edges[i].object);
-      if(this.edges[i].source == this){
-        this.edges[i].object = line(scene, this.position, this.edges[i].target.position, this.edges[i].options);
-      }else{
-        this.edges[i].object = line(scene, this.edges[i].source.position, this.position, this.edges[i].options)
-      }
-    }
-  }
-
   var CameraVertex = function(id, camera){
       Vertex.call(this, id);
       this.object = camera;
@@ -237,11 +222,6 @@ FourD = function(selector, options, default_settings, CppGraph){
     this.source.edge_count += 1;
     this.target.edge_count += 1;
 
-    if(!this.source.edges) this.source.edges = [];
-    if(!this.target.edges) this.target.edges = [];
-    this.source.edges[this.id] = this;
-    this.target.edges[this.id] = this;
-
     this.order = Math.random();
   };
 
@@ -258,9 +238,6 @@ FourD = function(selector, options, default_settings, CppGraph){
   };
 
   Edge.prototype.destroy = function(scene){
-    delete this.source.edges[this.id];
-    delete this.target.edges[this.id];
-
     CONSTANTS.scene.remove(this.object);
     delete this.object;
     
@@ -352,14 +329,7 @@ FourD = function(selector, options, default_settings, CppGraph){
       this.E.set(edge.id, edge);
       this.edge_counts[key] = 1;
     }else{
-      this.edge_counts[key]++;
-      for(var e in target.edges){
-        for(var r in source.edges){
-          if(e === r){
-            return source.edges[r];
-          }
-        }
-      }
+      this.edge_counts[key]++
     }
     
     edge.paint(this.scene);
@@ -392,11 +362,13 @@ FourD = function(selector, options, default_settings, CppGraph){
       vertex.label.remove();
     }
 
-    for(var e in vertex.edges){
-      vertex.edges[e].destroy(this.scene);  
-      this.E.delete(e.id)
+    for(var e of this.E.values()){
+      if(e.source.id == vertex.id || e.target.id == vertex.id){
+        e.destroy(this.scene);
+        this.E.delete(e.id)
+      }
     }
-    
+
     this.scene.remove(vertex.object);
     this.V.delete(vertex.id);
   };
