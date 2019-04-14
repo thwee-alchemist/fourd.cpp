@@ -26,7 +26,7 @@
           
           <button 
             class="btn btn-primary" 
-            onclick="fourd.graph.add_edge(graph.V[parseInt(prompt('Source?'))], graph.V[parseInt(prompt('Target?'))], {});">
+            onclick="fourd.graph.add_edge(graph.V.get(parseInt(prompt('Source?'))), graph.V.get(parseInt(prompt('Target?'))), {color: 0xffffff});">
             +e
           </button>
         </div>
@@ -50,7 +50,7 @@
             onchange="console.log(repulsion.value = fourd.graph.settings.repulsion = parseFloat(this.value));"
             id="repulsion"
             type="range"
-            min="-10.0" 
+            min="0.0" 
             max="50.0" 
             step=".1"> 
 
@@ -66,7 +66,7 @@
             onchange="console.log(attraction.value = fourd.graph.settings.attraction = parseFloat(this.value));"
             id="attraction" 
             type="range" 
-            min="-10.0" 
+            min="0.0" 
             max="50.0" 
             step=".1">
 
@@ -82,7 +82,7 @@
             onchange="console.log(epsilon.value = fourd.graph.settings.epsilon = parseFloat(this.value));"
             id="epsilon" 
             type="range" 
-            min="-10.0" 
+            min="0.0" 
             max="10.0" 
             step=".1">
 

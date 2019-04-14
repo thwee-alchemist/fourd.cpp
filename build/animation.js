@@ -150,9 +150,9 @@ FourD = function(selector, options, default_settings, CppGraph){
   Vertex.prototype.paint = function(scene){
     this.object = new THREE.Group();
     this.object.position.set(
-      Math.random(),
-      Math.random(),
-      Math.random()
+      Math.random()*10,
+      Math.random()*10,
+      Math.random()*10
     );
     
     if(!this.options){
@@ -248,8 +248,9 @@ FourD = function(selector, options, default_settings, CppGraph){
   Edge.prototype.paint = function(scene, options){
     options = options || {
       color: 0xffffff
-    }
+    };
     this.object = line(scene, this.source.object.position, this.target.object.position, options);
+    this.object.edge = this;
   };
 
   Edge.prototype.toString = function(){
@@ -272,10 +273,10 @@ FourD = function(selector, options, default_settings, CppGraph){
     this.scene = scene;
     this.type = 'Graph';
     this.vertex_id_spawn = 0;
-    this.V = {};
+    this.V = new Map();
 
     this.edge_id_spawn = 0;
-    this.E = {};
+    this.E = new Map();
 
     this.edge_counts = {};
 
@@ -285,8 +286,8 @@ FourD = function(selector, options, default_settings, CppGraph){
   };
 
   Graph.prototype.random_edge = function(){
-    var src = this.V[Math.floor(Math.random() * this.V.length)];
-    var tgt = this.V[Math.floor(Math.random() * this.V.length)];
+    var src = this.V.get(Math.floor(Math.random() * this.V.length));
+    var tgt = this.V.get(Math.floor(Math.random() * this.V.length));
     console.assert(src, "src must not be undefined");
     console.assert(tgt, "tgt must not be undefined");
     console.assert(src !== tgt, "src and tgt should not be equal");
@@ -298,18 +299,18 @@ FourD = function(selector, options, default_settings, CppGraph){
   // api
   Graph.prototype.clear = function(){
 
-    for(var e in this.E){
-      this.E[e].destroy(that.scene);
+    for(var e in this.E.values()){
+      e.destroy(this.scene);
     }
 
-    for(var v in this.V){
+    for(var v in this.V.values()){
       // this.scene.remove...
-      scene.remove(this.V[v].object);
+      scene.remove(v.object);
       // this.V[v].destroy();
     }
     
-    this.V = {};
-    this.E = {};
+    this.V = new Map();
+    this.E = new Map();
     this.edge_counts = {};
     this.edge_id_spawn = 0;
     this.vertex_id_spawn = 0;
@@ -325,7 +326,7 @@ FourD = function(selector, options, default_settings, CppGraph){
     
     var v = new Vertex(this.g.add_vertex(), options);
     v.paint(this.scene);
-    this.V[v.id] = v;
+    this.V.set(v.id, v);
     v.object.vertex = v;
     
     return v;
@@ -334,7 +335,7 @@ FourD = function(selector, options, default_settings, CppGraph){
   Graph.prototype.add_camera_vertex = function(camera){
     var v = new CameraVertex(this.vertex_id_spawn++, camera);
     v.position = v.object.position;
-    this.V[v.id] = v;
+    this.V.set(v.id, v);
     return v;
   };
 
@@ -348,7 +349,7 @@ FourD = function(selector, options, default_settings, CppGraph){
     
     if(!this.edge_counts.hasOwnProperty(key)){
       edge = new Edge(this.g.add_edge(source.id, target.id, options.directed), source, target, options);
-      this.E[edge.id] = edge;
+      this.E.set(edge.id, edge);
       this.edge_counts[key] = 1;
     }else{
       this.edge_counts[key]++;
@@ -374,13 +375,13 @@ FourD = function(selector, options, default_settings, CppGraph){
     var key = this._make_key(edge.source, edge.target);
     if(--this.edge_counts[key] === 0){
       edge.destroy();
-      delete this.E[edge.id];
+      this.E.delete(edge.id);
     }
   };
 
   Graph.prototype.toString = function(){
-    var edges = Object.keys(this.E).length;
-    var nodes = Object.keys(this.V).length;
+    var edges = this.size;
+    var nodes = this.V.size;
 
     return '|V|: ' + nodes.toString() + ', |E|: ' + edges.toString();
   };
@@ -393,11 +394,11 @@ FourD = function(selector, options, default_settings, CppGraph){
 
     for(var e in vertex.edges){
       vertex.edges[e].destroy(this.scene);  
-      delete this.E[e];
+      this.E.delete(e.id)
     }
     
     this.scene.remove(vertex.object);
-    delete this.V[vertex.id];
+    this.V.delete(vertex.id);
   };
 
   var is_graph = function(potential){
@@ -463,26 +464,27 @@ FourD = function(selector, options, default_settings, CppGraph){
 
   // apiish this will change
   // todo: make line options like cube options
-  var line = function(source, source, target, options){
+  var line = function(scene, source, target, options){
+    // var geometry = new THREE.BufferGeometry();
+    // geometry.setDrawRange(0, 2);
     var geometry = new THREE.Geometry();
-    geometry.dynamic = true;
-
     geometry.vertices.push(source);
     geometry.vertices.push(target);
 
-    geometry.verticesNeedUpdate = true;
-
-		options = options || {};
-		options.color = options.color ? options.color : 0xffffff;
-		options.transparent = options.transparent ? options.transparent : false;
-		options.opacity = options.opacity ? options.opacity : 1.0;
-        
-    var material = new THREE.LineBasicMaterial(options);
+    // geometry.addAttribute('position', new THREE.BufferAttribute(positions, 6));
     
+		options = options || {};
+		options.color = options.color !== undefined ? options.color : 0xffffff;
+		// options.transparent = options.transparent ? options.transparent : false;
+		// options.opacity = options.opacity ? options.opacity : 1.0;
+    options.linewidth = options.linewidth || 1; 
+    var material = new THREE.LineBasicMaterial({color: options.color});
+
     var line = new THREE.Line( geometry, material );
     line.frustumCulled = false;
       
     scene.add(line);
+    line.geometry.verticesNeedUpdate = true;
     return line;
   };
   
@@ -496,24 +498,28 @@ FourD = function(selector, options, default_settings, CppGraph){
       console.error(pos_str);
     }
 
-    for(var i=0; i<positions.length; i++){
-      this.V[i].object.position.copy(positions[i]);
-    };
+    var i=0;
+    for(var v of this.V.values()){
+      v.object.position.x = positions[i].x;
+      v.object.position.y = positions[i].y;
+      v.object.position.z = positions[i++].z;
+    }
 
-    for(var i=0; i<this.E.length; i++){
-      var geometry = this.E[i].object.gemoetry;
-      this.E[i].object.geometry.vertices[0].copy(this.E[i].source.object.position);
-      this.E[i].object.geometry.vertices[1].copy(this.E[i].target.object.position);
-      this.E[i].object.dynamic = true;
-      this.E[i].object.matrixAutoUpdate  = true;
+    for(var e of this.E.values()){
+      var edge = e;
+      var source = edge.source.object.position;
+      var target = edge.target.object.position;
 
-      this.E[i].object.geometry.verticesNeedUpdate = true;
-      this.E[i].object.geometry.elementsNeedUpdate = true;
-      this.E[i].object.geometry.morphTargetsNeedUpdate = true;
-      this.E[i].object.geometry.uvsNeedUpdate = true;
-      this.E[i].object.geometry.normalsNeedUpdate = true;
-      this.E[i].object.geometry.colorsNeedUpdate = true;
-      this.E[i].object.geometry.tangentsNeedUpdate = true;
+      edge.object.geometry.vertices[0].x = source.x;
+      edge.object.geometry.vertices[0].y = source.y;
+      edge.object.geometry.vertices[0].z = source.z;
+
+      edge.object.geometry.vertices[1].x = target.x;
+      edge.object.geometry.vertices[1].y = target.y;
+      edge.object.geometry.vertices[1].z = target.z;
+
+      edge.object.geometry.verticesNeedUpdate = true;
+      edge.object.geometry.computeBoundingSphere();
     }
   };
 	
