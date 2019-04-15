@@ -20,19 +20,7 @@ var Module = typeof Module !== 'undefined' ? Module : {};
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// Copyright 2013 The Emscripten Authors.  All rights reserved.
-// Emscripten is available under two separate licenses, the MIT license and the
-// University of Illinois/NCSA Open Source License.  Both these licenses can be
-// found in the LICENSE file.
-
-// Route URL GET parameters to argc+argv
-if (typeof window === "object") {
-  Module['arguments'] = window.location.search.substr(1).trim().split('&');
-  // If no args were passed arguments = [''], in which case kill the single empty string.
-  if (!Module['arguments'][0])
-    Module['arguments'] = [];
-}
-
+// {{PRE_JSES}}
 
 // Sometimes an existing Module object exists with properties
 // meant to overwrite the default module functionality. Here
@@ -553,6 +541,7 @@ if (typeof WebAssembly !== 'object') {
 function getValue(ptr, type, noSafe) {
   type = type || 'i8';
   if (type.charAt(type.length-1) === '*') type = 'i32'; // pointers are 32-bit
+  if (noSafe) {
     switch(type) {
       case 'i1': return HEAP8[((ptr)>>0)];
       case 'i8': return HEAP8[((ptr)>>0)];
@@ -563,9 +552,76 @@ function getValue(ptr, type, noSafe) {
       case 'double': return HEAPF64[((ptr)>>3)];
       default: abort('invalid type for getValue: ' + type);
     }
+  } else {
+    switch(type) {
+      case 'i1': return ((SAFE_HEAP_LOAD(((ptr)|0), 1, 0))|0);
+      case 'i8': return ((SAFE_HEAP_LOAD(((ptr)|0), 1, 0))|0);
+      case 'i16': return ((SAFE_HEAP_LOAD(((ptr)|0), 2, 0))|0);
+      case 'i32': return ((SAFE_HEAP_LOAD(((ptr)|0), 4, 0))|0);
+      case 'i64': return ((SAFE_HEAP_LOAD(((ptr)|0), 8, 0))|0);
+      case 'float': return Math_fround(SAFE_HEAP_LOAD_D(((ptr)|0), 4, 0));
+      case 'double': return (+(SAFE_HEAP_LOAD_D(((ptr)|0), 8, 0)));
+      default: abort('invalid type for getValue: ' + type);
+    }
+  }
   return null;
 }
 
+function getSafeHeapType(bytes, isFloat) {
+  switch (bytes) {
+    case 1: return 'i8';
+    case 2: return 'i16';
+    case 4: return isFloat ? 'float' : 'i32';
+    case 8: return 'double';
+    default: assert(0);
+  }
+}
+
+
+function SAFE_HEAP_STORE(dest, value, bytes, isFloat) {
+  if (dest <= 0) abort('segmentation fault storing ' + bytes + ' bytes to address ' + dest);
+  if (dest % bytes !== 0) abort('alignment error storing to address ' + dest + ', which was expected to be aligned to a multiple of ' + bytes);
+  if (dest + bytes > HEAP32[DYNAMICTOP_PTR>>2]) abort('segmentation fault, exceeded the top of the available dynamic heap when storing ' + bytes + ' bytes to address ' + dest + '. DYNAMICTOP=' + HEAP32[DYNAMICTOP_PTR>>2]);
+  assert(DYNAMICTOP_PTR);
+  assert(HEAP32[DYNAMICTOP_PTR>>2] <= HEAP8.length);
+  setValue(dest, value, getSafeHeapType(bytes, isFloat), 1);
+}
+function SAFE_HEAP_STORE_D(dest, value, bytes) {
+  SAFE_HEAP_STORE(dest, value, bytes, true);
+}
+
+function SAFE_HEAP_LOAD(dest, bytes, unsigned, isFloat) {
+  if (dest <= 0) abort('segmentation fault loading ' + bytes + ' bytes from address ' + dest);
+  if (dest % bytes !== 0) abort('alignment error loading from address ' + dest + ', which was expected to be aligned to a multiple of ' + bytes);
+  if (dest + bytes > HEAP32[DYNAMICTOP_PTR>>2]) abort('segmentation fault, exceeded the top of the available dynamic heap when loading ' + bytes + ' bytes from address ' + dest + '. DYNAMICTOP=' + HEAP32[DYNAMICTOP_PTR>>2]);
+  assert(DYNAMICTOP_PTR);
+  assert(HEAP32[DYNAMICTOP_PTR>>2] <= HEAP8.length);
+  var type = getSafeHeapType(bytes, isFloat);
+  var ret = getValue(dest, type, 1);
+  if (unsigned) ret = unSign(ret, parseInt(type.substr(1)), 1);
+  return ret;
+}
+function SAFE_HEAP_LOAD_D(dest, bytes, unsigned) {
+  return SAFE_HEAP_LOAD(dest, bytes, unsigned, true);
+}
+
+function SAFE_FT_MASK(value, mask) {
+  var ret = value & mask;
+  if (ret !== value) {
+    abort('Function table mask error: function pointer is ' + value + ' which is masked by ' + mask + ', the likely cause of this is that the function pointer is being called by the wrong type.');
+  }
+  return ret;
+}
+
+function segfault() {
+  abort('segmentation fault');
+}
+function alignfault() {
+  abort('alignment fault');
+}
+function ftfault() {
+  abort('Function table mask error');
+}
 
 
 
@@ -662,6 +718,7 @@ function cwrap(ident, returnType, argTypes, opts) {
 function setValue(ptr, value, type, noSafe) {
   type = type || 'i8';
   if (type.charAt(type.length-1) === '*') type = 'i32'; // pointers are 32-bit
+  if (noSafe) {
     switch(type) {
       case 'i1': HEAP8[((ptr)>>0)]=value; break;
       case 'i8': HEAP8[((ptr)>>0)]=value; break;
@@ -672,6 +729,18 @@ function setValue(ptr, value, type, noSafe) {
       case 'double': HEAPF64[((ptr)>>3)]=value; break;
       default: abort('invalid type for setValue: ' + type);
     }
+  } else {
+    switch(type) {
+      case 'i1': SAFE_HEAP_STORE(((ptr)|0), ((value)|0), 1); break;
+      case 'i8': SAFE_HEAP_STORE(((ptr)|0), ((value)|0), 1); break;
+      case 'i16': SAFE_HEAP_STORE(((ptr)|0), ((value)|0), 2); break;
+      case 'i32': SAFE_HEAP_STORE(((ptr)|0), ((value)|0), 4); break;
+      case 'i64': (tempI64 = [value>>>0,(tempDouble=value,(+(Math_abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? ((Math_min((+(Math_floor((tempDouble)/4294967296.0))), 4294967295.0))|0)>>>0 : (~~((+(Math_ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)],SAFE_HEAP_STORE(((ptr)|0), ((tempI64[0])|0), 4),SAFE_HEAP_STORE((((ptr)+(4))|0), ((tempI64[1])|0), 4)); break;
+      case 'float': SAFE_HEAP_STORE_D(((ptr)|0), Math_fround(value), 4); break;
+      case 'double': SAFE_HEAP_STORE_D(((ptr)|0), (+(value)), 8); break;
+      default: abort('invalid type for setValue: ' + type);
+    }
+  }
 }
 
 var ALLOC_NORMAL = 0; // Tries to use _malloc()
@@ -784,7 +853,7 @@ function Pointer_stringify(ptr, length) {
 function AsciiToString(ptr) {
   var str = '';
   while (1) {
-    var ch = HEAPU8[((ptr++)>>0)];
+    var ch = ((SAFE_HEAP_LOAD(((ptr++)|0), 1, 1))|0);
     if (!ch) return str;
     str += String.fromCharCode(ch);
   }
@@ -969,7 +1038,7 @@ function UTF16ToString(ptr) {
 
     var str = '';
     while (1) {
-      var codeUnit = HEAP16[(((ptr)+(i*2))>>1)];
+      var codeUnit = ((SAFE_HEAP_LOAD((((ptr)+(i*2))|0), 2, 0))|0);
       if (codeUnit == 0) return str;
       ++i;
       // fromCharCode constructs a character from a UTF-16 code unit, so we can pass the UTF16 string right through.
@@ -1003,11 +1072,11 @@ function stringToUTF16(str, outPtr, maxBytesToWrite) {
   for (var i = 0; i < numCharsToWrite; ++i) {
     // charCodeAt returns a UTF-16 encoded code unit, so it can be directly written to the HEAP.
     var codeUnit = str.charCodeAt(i); // possibly a lead surrogate
-    HEAP16[((outPtr)>>1)]=codeUnit;
+    SAFE_HEAP_STORE(((outPtr)|0), ((codeUnit)|0), 2);
     outPtr += 2;
   }
   // Null-terminate the pointer to the HEAP.
-  HEAP16[((outPtr)>>1)]=0;
+  SAFE_HEAP_STORE(((outPtr)|0), ((0)|0), 2);
   return outPtr - startPtr;
 }
 
@@ -1023,7 +1092,7 @@ function UTF32ToString(ptr) {
 
   var str = '';
   while (1) {
-    var utf32 = HEAP32[(((ptr)+(i*4))>>2)];
+    var utf32 = ((SAFE_HEAP_LOAD((((ptr)+(i*4))|0), 4, 0))|0);
     if (utf32 == 0)
       return str;
     ++i;
@@ -1067,12 +1136,12 @@ function stringToUTF32(str, outPtr, maxBytesToWrite) {
       var trailSurrogate = str.charCodeAt(++i);
       codeUnit = 0x10000 + ((codeUnit & 0x3FF) << 10) | (trailSurrogate & 0x3FF);
     }
-    HEAP32[((outPtr)>>2)]=codeUnit;
+    SAFE_HEAP_STORE(((outPtr)|0), ((codeUnit)|0), 4);
     outPtr += 4;
     if (outPtr + 4 > endPtr) break;
   }
   // Null-terminate the pointer to the HEAP.
-  HEAP32[((outPtr)>>2)]=0;
+  SAFE_HEAP_STORE(((outPtr)|0), ((0)|0), 4);
   return outPtr - startPtr;
 }
 
@@ -1136,10 +1205,10 @@ function writeArrayToMemory(array, buffer) {
 function writeAsciiToMemory(str, buffer, dontAddNull) {
   for (var i = 0; i < str.length; ++i) {
     assert(str.charCodeAt(i) === str.charCodeAt(i)&0xff);
-    HEAP8[((buffer++)>>0)]=str.charCodeAt(i);
+    SAFE_HEAP_STORE(((buffer++)|0), ((str.charCodeAt(i))|0), 1);
   }
   // Null-terminate the pointer to the HEAP.
-  if (!dontAddNull) HEAP8[((buffer)>>0)]=0;
+  if (!dontAddNull) SAFE_HEAP_STORE(((buffer)|0), ((0)|0), 1);
 }
 
 
@@ -1232,11 +1301,11 @@ function updateGlobalBufferViews() {
 
 
 var STATIC_BASE = 1024,
-    STACK_BASE = 23312,
+    STACK_BASE = 23328,
     STACKTOP = STACK_BASE,
-    STACK_MAX = 5266192,
-    DYNAMIC_BASE = 5266192,
-    DYNAMICTOP_PTR = 23056;
+    STACK_MAX = 5266208,
+    DYNAMIC_BASE = 5266208,
+    DYNAMICTOP_PTR = 23072;
 
 assert(STACK_BASE % 16 === 0, 'stack must start aligned');
 assert(DYNAMIC_BASE % 16 === 0, 'heap must start aligned');
@@ -1368,9 +1437,6 @@ function preMain() {
 
 function exitRuntime() {
   checkStackCookie();
-  callRuntimeCallbacks(__ATEXIT__);
-  FS.quit();
-TTY.shutdown();
   runtimeExited = true;
 }
 
@@ -1399,7 +1465,6 @@ function addOnPreMain(cb) {
 }
 
 function addOnExit(cb) {
-  __ATEXIT__.unshift(cb);
 }
 
 function addOnPostRun(cb) {
@@ -1691,8 +1756,8 @@ Module['asm'] = function(global, env, providedBuffer) {
   ;
   // import table
   env['table'] = wasmTable = new WebAssembly.Table({
-    'initial': 11072,
-    'maximum': 11072,
+    'initial': 12096,
+    'maximum': 12096,
     'element': 'anyfunc'
   });
   env['__memory_base'] = 1024; // tell the memory segments where to place themselves
@@ -1711,7 +1776,7 @@ var ASM_CONSTS = [];
 
 
 
-// STATICTOP = STATIC_BASE + 22288;
+// STATICTOP = STATIC_BASE + 22304;
 /* global initializers */  __ATINIT__.push({ func: function() { globalCtors() } });
 
 
@@ -1722,7 +1787,7 @@ var ASM_CONSTS = [];
 
 
 /* no memory initializer */
-var tempDoublePtr = 23296
+var tempDoublePtr = 23312
 assert(tempDoublePtr % 8 == 0);
 
 function copyTempFloat(ptr) { // functions, because inlining this code increases code size too much
@@ -1753,13 +1818,6 @@ function copyTempDouble(ptr) {
   function ___cxa_allocate_exception(size) {
       return _malloc(size);
     }
-
-  
-  function _atexit(func, arg) {
-      __ATEXIT__.unshift({ func: func, arg: arg });
-    }function ___cxa_atexit() {
-  return _atexit.apply(null, arguments)
-  }
 
   
   
@@ -1839,7 +1897,7 @@ function copyTempDouble(ptr) {
       var pointer = Module['___cxa_is_pointer_type'](throwntype);
       // can_catch receives a **, add indirection
       if (!___cxa_find_matching_catch.buffer) ___cxa_find_matching_catch.buffer = _malloc(4);
-      HEAP32[((___cxa_find_matching_catch.buffer)>>2)]=thrown;
+      SAFE_HEAP_STORE(((___cxa_find_matching_catch.buffer)|0), ((thrown)|0), 4);
       thrown = ___cxa_find_matching_catch.buffer;
       // The different catch blocks are denoted by different types.
       // Due to inheritance, those types may not precisely match the
@@ -1847,7 +1905,7 @@ function copyTempDouble(ptr) {
       // return the type of the catch block which should be called.
       for (var i = 0; i < typeArray.length; i++) {
         if (typeArray[i] && Module['___cxa_can_catch'](typeArray[i], throwntype, thrown)) {
-          thrown = HEAP32[((thrown)>>2)]; // undo indirection
+          thrown = ((SAFE_HEAP_LOAD(((thrown)|0), 4, 0))|0); // undo indirection
           info.adjusted.push(thrown);
           return ((setTempRet0(typeArray[i]),thrown)|0);
         }
@@ -1855,7 +1913,7 @@ function copyTempDouble(ptr) {
       // Shouldn't happen unless we have bogus data in typeArray
       // or encounter a type for which emscripten doesn't have suitable
       // typeinfo defined. Best-efforts match just in case.
-      thrown = HEAP32[((thrown)>>2)]; // undo indirection
+      thrown = ((SAFE_HEAP_LOAD(((thrown)|0), 4, 0))|0); // undo indirection
       return ((setTempRet0(throwntype),thrown)|0);
     }function ___cxa_throw(ptr, type, destructor) {
       EXCEPTIONS.infos[ptr] = {
@@ -1887,7 +1945,7 @@ function copyTempDouble(ptr) {
 
   
   function ___setErrNo(value) {
-      if (Module['___errno_location']) HEAP32[((Module['___errno_location']())>>2)]=value;
+      if (Module['___errno_location']) SAFE_HEAP_STORE(((Module['___errno_location']())|0), ((value)|0), 4);
       else err('failed to set errno from JS');
       return value;
     }function ___map_file(pathname, size) {
@@ -3163,11 +3221,11 @@ function copyTempDouble(ptr) {
   
   var ERRNO_CODES={EPERM:1,ENOENT:2,ESRCH:3,EINTR:4,EIO:5,ENXIO:6,E2BIG:7,ENOEXEC:8,EBADF:9,ECHILD:10,EAGAIN:11,EWOULDBLOCK:11,ENOMEM:12,EACCES:13,EFAULT:14,ENOTBLK:15,EBUSY:16,EEXIST:17,EXDEV:18,ENODEV:19,ENOTDIR:20,EISDIR:21,EINVAL:22,ENFILE:23,EMFILE:24,ENOTTY:25,ETXTBSY:26,EFBIG:27,ENOSPC:28,ESPIPE:29,EROFS:30,EMLINK:31,EPIPE:32,EDOM:33,ERANGE:34,ENOMSG:42,EIDRM:43,ECHRNG:44,EL2NSYNC:45,EL3HLT:46,EL3RST:47,ELNRNG:48,EUNATCH:49,ENOCSI:50,EL2HLT:51,EDEADLK:35,ENOLCK:37,EBADE:52,EBADR:53,EXFULL:54,ENOANO:55,EBADRQC:56,EBADSLT:57,EDEADLOCK:35,EBFONT:59,ENOSTR:60,ENODATA:61,ETIME:62,ENOSR:63,ENONET:64,ENOPKG:65,EREMOTE:66,ENOLINK:67,EADV:68,ESRMNT:69,ECOMM:70,EPROTO:71,EMULTIHOP:72,EDOTDOT:73,EBADMSG:74,ENOTUNIQ:76,EBADFD:77,EREMCHG:78,ELIBACC:79,ELIBBAD:80,ELIBSCN:81,ELIBMAX:82,ELIBEXEC:83,ENOSYS:38,ENOTEMPTY:39,ENAMETOOLONG:36,ELOOP:40,EOPNOTSUPP:95,EPFNOSUPPORT:96,ECONNRESET:104,ENOBUFS:105,EAFNOSUPPORT:97,EPROTOTYPE:91,ENOTSOCK:88,ENOPROTOOPT:92,ESHUTDOWN:108,ECONNREFUSED:111,EADDRINUSE:98,ECONNABORTED:103,ENETUNREACH:101,ENETDOWN:100,ETIMEDOUT:110,EHOSTDOWN:112,EHOSTUNREACH:113,EINPROGRESS:115,EALREADY:114,EDESTADDRREQ:89,EMSGSIZE:90,EPROTONOSUPPORT:93,ESOCKTNOSUPPORT:94,EADDRNOTAVAIL:99,ENETRESET:102,EISCONN:106,ENOTCONN:107,ETOOMANYREFS:109,EUSERS:87,EDQUOT:122,ESTALE:116,ENOTSUP:95,ENOMEDIUM:123,EILSEQ:84,EOVERFLOW:75,ECANCELED:125,ENOTRECOVERABLE:131,EOWNERDEAD:130,ESTRPIPE:86};
   
-  var _stdin=23072;
+  var _stdin=23088;
   
-  var _stdout=23088;
+  var _stdout=23104;
   
-  var _stderr=23104;var FS={root:null,mounts:[],devices:{},streams:[],nextInode:1,nameTable:null,currentPath:"/",initialized:false,ignorePermissions:true,trackingDelegate:{},tracking:{openFlags:{READ:1,WRITE:2}},ErrnoError:null,genericErrors:{},filesystems:null,syncFSRequests:0,handleFSError:function (e) {
+  var _stderr=23120;var FS={root:null,mounts:[],devices:{},streams:[],nextInode:1,nameTable:null,currentPath:"/",initialized:false,ignorePermissions:true,trackingDelegate:{},tracking:{openFlags:{READ:1,WRITE:2}},ErrnoError:null,genericErrors:{},filesystems:null,syncFSRequests:0,handleFSError:function (e) {
         if (!(e instanceof FS.ErrnoError)) throw e + ' : ' + stackTrace();
         return ___setErrNo(e.errno);
       },lookupPath:function (path, opts) {
@@ -4871,25 +4929,25 @@ function copyTempDouble(ptr) {
           }
           throw e;
         }
-        HEAP32[((buf)>>2)]=stat.dev;
-        HEAP32[(((buf)+(4))>>2)]=0;
-        HEAP32[(((buf)+(8))>>2)]=stat.ino;
-        HEAP32[(((buf)+(12))>>2)]=stat.mode;
-        HEAP32[(((buf)+(16))>>2)]=stat.nlink;
-        HEAP32[(((buf)+(20))>>2)]=stat.uid;
-        HEAP32[(((buf)+(24))>>2)]=stat.gid;
-        HEAP32[(((buf)+(28))>>2)]=stat.rdev;
-        HEAP32[(((buf)+(32))>>2)]=0;
-        HEAP32[(((buf)+(36))>>2)]=stat.size;
-        HEAP32[(((buf)+(40))>>2)]=4096;
-        HEAP32[(((buf)+(44))>>2)]=stat.blocks;
-        HEAP32[(((buf)+(48))>>2)]=(stat.atime.getTime() / 1000)|0;
-        HEAP32[(((buf)+(52))>>2)]=0;
-        HEAP32[(((buf)+(56))>>2)]=(stat.mtime.getTime() / 1000)|0;
-        HEAP32[(((buf)+(60))>>2)]=0;
-        HEAP32[(((buf)+(64))>>2)]=(stat.ctime.getTime() / 1000)|0;
-        HEAP32[(((buf)+(68))>>2)]=0;
-        HEAP32[(((buf)+(72))>>2)]=stat.ino;
+        SAFE_HEAP_STORE(((buf)|0), ((stat.dev)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(4))|0), ((0)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(8))|0), ((stat.ino)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(12))|0), ((stat.mode)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(16))|0), ((stat.nlink)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(20))|0), ((stat.uid)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(24))|0), ((stat.gid)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(28))|0), ((stat.rdev)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(32))|0), ((0)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(36))|0), ((stat.size)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(40))|0), ((4096)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(44))|0), ((stat.blocks)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(48))|0), (((stat.atime.getTime() / 1000)|0)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(52))|0), ((0)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(56))|0), (((stat.mtime.getTime() / 1000)|0)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(60))|0), ((0)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(64))|0), (((stat.ctime.getTime() / 1000)|0)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(68))|0), ((0)|0), 4);
+        SAFE_HEAP_STORE((((buf)+(72))|0), ((stat.ino)|0), 4);
         return 0;
       },doMsync:function (addr, stream, len, flags) {
         var buffer = new Uint8Array(HEAPU8.subarray(addr, addr + len));
@@ -4949,8 +5007,8 @@ function copyTempDouble(ptr) {
       },doReadv:function (stream, iov, iovcnt, offset) {
         var ret = 0;
         for (var i = 0; i < iovcnt; i++) {
-          var ptr = HEAP32[(((iov)+(i*8))>>2)];
-          var len = HEAP32[(((iov)+(i*8 + 4))>>2)];
+          var ptr = ((SAFE_HEAP_LOAD((((iov)+(i*8))|0), 4, 0))|0);
+          var len = ((SAFE_HEAP_LOAD((((iov)+(i*8 + 4))|0), 4, 0))|0);
           var curr = FS.read(stream, HEAP8,ptr, len, offset);
           if (curr < 0) return -1;
           ret += curr;
@@ -4960,8 +5018,8 @@ function copyTempDouble(ptr) {
       },doWritev:function (stream, iov, iovcnt, offset) {
         var ret = 0;
         for (var i = 0; i < iovcnt; i++) {
-          var ptr = HEAP32[(((iov)+(i*8))>>2)];
-          var len = HEAP32[(((iov)+(i*8 + 4))>>2)];
+          var ptr = ((SAFE_HEAP_LOAD((((iov)+(i*8))|0), 4, 0))|0);
+          var len = ((SAFE_HEAP_LOAD((((iov)+(i*8 + 4))|0), 4, 0))|0);
           var curr = FS.write(stream, HEAP8,ptr, len, offset);
           if (curr < 0) return -1;
           ret += curr;
@@ -4969,7 +5027,7 @@ function copyTempDouble(ptr) {
         return ret;
       },varargs:0,get:function (varargs) {
         SYSCALLS.varargs += 4;
-        var ret = HEAP32[(((SYSCALLS.varargs)-(4))>>2)];
+        var ret = ((SAFE_HEAP_LOAD((((SYSCALLS.varargs)-(4))|0), 4, 0))|0);
         return ret;
       },getStr:function () {
         var ret = UTF8ToString(SYSCALLS.get());
@@ -5003,7 +5061,7 @@ function copyTempDouble(ptr) {
       // NOTE: offset_high is unused - Emscripten's off_t is 32-bit
       var offset = offset_low;
       FS.llseek(stream, offset, whence);
-      HEAP32[((result)>>2)]=stream.position;
+      SAFE_HEAP_STORE(((result)|0), ((stream.position)|0), 4);
       if (stream.getdents && offset === 0 && whence === 0) stream.getdents = null; // reset readdir state
       return 0;
     } catch (e) {
@@ -5045,7 +5103,7 @@ function copyTempDouble(ptr) {
         case 21519: {
           if (!stream.tty) return -ERRNO_CODES.ENOTTY;
           var argp = SYSCALLS.get();
-          HEAP32[((argp)>>2)]=0;
+          SAFE_HEAP_STORE(((argp)|0), ((0)|0), 4);
           return 0;
         }
         case 21520: {
@@ -6950,19 +7008,19 @@ function copyTempDouble(ptr) {
       // size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, const struct tm *restrict timeptr);
       // http://pubs.opengroup.org/onlinepubs/009695399/functions/strftime.html
   
-      var tm_zone = HEAP32[(((tm)+(40))>>2)];
+      var tm_zone = ((SAFE_HEAP_LOAD((((tm)+(40))|0), 4, 0))|0);
   
       var date = {
-        tm_sec: HEAP32[((tm)>>2)],
-        tm_min: HEAP32[(((tm)+(4))>>2)],
-        tm_hour: HEAP32[(((tm)+(8))>>2)],
-        tm_mday: HEAP32[(((tm)+(12))>>2)],
-        tm_mon: HEAP32[(((tm)+(16))>>2)],
-        tm_year: HEAP32[(((tm)+(20))>>2)],
-        tm_wday: HEAP32[(((tm)+(24))>>2)],
-        tm_yday: HEAP32[(((tm)+(28))>>2)],
-        tm_isdst: HEAP32[(((tm)+(32))>>2)],
-        tm_gmtoff: HEAP32[(((tm)+(36))>>2)],
+        tm_sec: ((SAFE_HEAP_LOAD(((tm)|0), 4, 0))|0),
+        tm_min: ((SAFE_HEAP_LOAD((((tm)+(4))|0), 4, 0))|0),
+        tm_hour: ((SAFE_HEAP_LOAD((((tm)+(8))|0), 4, 0))|0),
+        tm_mday: ((SAFE_HEAP_LOAD((((tm)+(12))|0), 4, 0))|0),
+        tm_mon: ((SAFE_HEAP_LOAD((((tm)+(16))|0), 4, 0))|0),
+        tm_year: ((SAFE_HEAP_LOAD((((tm)+(20))|0), 4, 0))|0),
+        tm_wday: ((SAFE_HEAP_LOAD((((tm)+(24))|0), 4, 0))|0),
+        tm_yday: ((SAFE_HEAP_LOAD((((tm)+(28))|0), 4, 0))|0),
+        tm_isdst: ((SAFE_HEAP_LOAD((((tm)+(32))|0), 4, 0))|0),
+        tm_gmtoff: ((SAFE_HEAP_LOAD((((tm)+(36))|0), 4, 0))|0),
         tm_zone: tm_zone ? UTF8ToString(tm_zone) : ''
       };
   
@@ -7251,12 +7309,10 @@ function copyTempDouble(ptr) {
   function _time(ptr) {
       var ret = (Date.now()/1000)|0;
       if (ptr) {
-        HEAP32[((ptr)>>2)]=ret;
+        SAFE_HEAP_STORE(((ptr)|0), ((ret)|0), 4);
       }
       return ret;
     }
-
-  var ___dso_handle=23136;
 FS.staticInit();;
 if (ENVIRONMENT_IS_NODE) { var fs = require("fs"); var NODEJS_PATH = require("path"); NODEFS.staticInit(); };
 embind_init_charCodes();
@@ -7320,9 +7376,13 @@ function nullFunc_iiiii(x) { err("Invalid function pointer called with signature
 
 function nullFunc_iiiiid(x) { err("Invalid function pointer called with signature 'iiiiid'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
 
+function nullFunc_iiiiif(x) { err("Invalid function pointer called with signature 'iiiiif'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
+
 function nullFunc_iiiiii(x) { err("Invalid function pointer called with signature 'iiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
 
 function nullFunc_iiiiiid(x) { err("Invalid function pointer called with signature 'iiiiiid'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
+
+function nullFunc_iiiiiif(x) { err("Invalid function pointer called with signature 'iiiiiif'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
 
 function nullFunc_iiiiiii(x) { err("Invalid function pointer called with signature 'iiiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
 
@@ -7359,6 +7419,9 @@ var asmLibraryArg = {
   "setTempRet0": setTempRet0,
   "getTempRet0": getTempRet0,
   "abortStackOverflow": abortStackOverflow,
+  "segfault": segfault,
+  "alignfault": alignfault,
+  "ftfault": ftfault,
   "nullFunc_fi": nullFunc_fi,
   "nullFunc_fii": nullFunc_fii,
   "nullFunc_i": nullFunc_i,
@@ -7368,8 +7431,10 @@ var asmLibraryArg = {
   "nullFunc_iiii": nullFunc_iiii,
   "nullFunc_iiiii": nullFunc_iiiii,
   "nullFunc_iiiiid": nullFunc_iiiiid,
+  "nullFunc_iiiiif": nullFunc_iiiiif,
   "nullFunc_iiiiii": nullFunc_iiiiii,
   "nullFunc_iiiiiid": nullFunc_iiiiiid,
+  "nullFunc_iiiiiif": nullFunc_iiiiiif,
   "nullFunc_iiiiiii": nullFunc_iiiiiii,
   "nullFunc_iiiiiiii": nullFunc_iiiiiiii,
   "nullFunc_iiiiiiiii": nullFunc_iiiiiiiii,
@@ -7398,7 +7463,6 @@ var asmLibraryArg = {
   "RegisteredPointer_getPointee": RegisteredPointer_getPointee,
   "___assert_fail": ___assert_fail,
   "___cxa_allocate_exception": ___cxa_allocate_exception,
-  "___cxa_atexit": ___cxa_atexit,
   "___cxa_begin_catch": ___cxa_begin_catch,
   "___cxa_find_matching_catch": ___cxa_find_matching_catch,
   "___cxa_free_exception": ___cxa_free_exception,
@@ -7434,7 +7498,6 @@ var asmLibraryArg = {
   "__emval_register": __emval_register,
   "__isLeapYear": __isLeapYear,
   "_abort": _abort,
-  "_atexit": _atexit,
   "_embind_repr": _embind_repr,
   "_emscripten_get_heap_size": _emscripten_get_heap_size,
   "_emscripten_memcpy_big": _emscripten_memcpy_big,
@@ -7494,8 +7557,7 @@ var asmLibraryArg = {
   "validateThis": validateThis,
   "whenDependentTypesAreResolved": whenDependentTypesAreResolved,
   "tempDoublePtr": tempDoublePtr,
-  "DYNAMICTOP_PTR": DYNAMICTOP_PTR,
-  "___dso_handle": ___dso_handle
+  "DYNAMICTOP_PTR": DYNAMICTOP_PTR
 }
 // EMSCRIPTEN_START_ASM
 var asm =Module["asm"]// EMSCRIPTEN_END_ASM
@@ -7709,6 +7771,10 @@ var dynCall_iiiiid = Module["dynCall_iiiiid"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
   return Module["asm"]["dynCall_iiiiid"].apply(null, arguments) };
+var dynCall_iiiiif = Module["dynCall_iiiiif"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["dynCall_iiiiif"].apply(null, arguments) };
 var dynCall_iiiiii = Module["dynCall_iiiiii"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
@@ -7717,6 +7783,10 @@ var dynCall_iiiiiid = Module["dynCall_iiiiiid"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
   return Module["asm"]["dynCall_iiiiiid"].apply(null, arguments) };
+var dynCall_iiiiiif = Module["dynCall_iiiiiif"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["dynCall_iiiiiif"].apply(null, arguments) };
 var dynCall_iiiiiii = Module["dynCall_iiiiiii"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
@@ -7807,7 +7877,7 @@ if (!Module["stackTrace"]) Module["stackTrace"] = function() { abort("'stackTrac
 if (!Module["addOnPreRun"]) Module["addOnPreRun"] = function() { abort("'addOnPreRun' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Module["addOnInit"]) Module["addOnInit"] = function() { abort("'addOnInit' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Module["addOnPreMain"]) Module["addOnPreMain"] = function() { abort("'addOnPreMain' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
-Module["addOnExit"] = addOnExit;
+if (!Module["addOnExit"]) Module["addOnExit"] = function() { abort("'addOnExit' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Module["addOnPostRun"]) Module["addOnPostRun"] = function() { abort("'addOnPostRun' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Module["writeStringToMemory"]) Module["writeStringToMemory"] = function() { abort("'writeStringToMemory' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Module["writeArrayToMemory"]) Module["writeArrayToMemory"] = function() { abort("'writeArrayToMemory' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
@@ -7928,8 +7998,51 @@ function run(args) {
 }
 Module['run'] = run;
 
+function checkUnflushedContent() {
+  // Compiler settings do not allow exiting the runtime, so flushing
+  // the streams is not possible. but in ASSERTIONS mode we check
+  // if there was something to flush, and if so tell the user they
+  // should request that the runtime be exitable.
+  // Normally we would not even include flush() at all, but in ASSERTIONS
+  // builds we do so just for this check, and here we see if there is any
+  // content to flush, that is, we check if there would have been
+  // something a non-ASSERTIONS build would have not seen.
+  // How we flush the streams depends on whether we are in FILESYSTEM=0
+  // mode (which has its own special function for this; otherwise, all
+  // the code is inside libc)
+  var print = out;
+  var printErr = err;
+  var has = false;
+  out = err = function(x) {
+    has = true;
+  }
+  try { // it doesn't matter if it fails
+    var flush = Module['_fflush'];
+    if (flush) flush(0);
+    // also flush in the JS FS layer
+    var hasFS = true;
+    if (hasFS) {
+      ['stdout', 'stderr'].forEach(function(name) {
+        var info = FS.analyzePath('/dev/' + name);
+        if (!info) return;
+        var stream = info.object;
+        var rdev = stream.rdev;
+        var tty = TTY.ttys[rdev];
+        if (tty && tty.output && tty.output.length) {
+          has = true;
+        }
+      });
+    }
+  } catch(e) {}
+  out = print;
+  err = printErr;
+  if (has) {
+    warnOnce('stdio streams had content in them that was not flushed. you should set EXIT_RUNTIME to 1 (see the FAQ), or make sure to emit a newline when you printf etc.');
+  }
+}
 
 function exit(status, implicit) {
+  checkUnflushedContent();
 
   // if this is just main exit-ing implicitly, and the status is 0, then we
   // don't need to do anything here and can just leave. if the status is
@@ -7942,7 +8055,7 @@ function exit(status, implicit) {
   if (Module['noExitRuntime']) {
     // if exit() was called, we may warn the user if the runtime isn't actually being shut down
     if (!implicit) {
-      err('exit(' + status + ') called, but noExitRuntime is set due to an async operation, so halting execution but not exiting the runtime or preventing further async execution (you can use emscripten_force_exit, if you want to force a true shutdown)');
+      err('exit(' + status + ') called, but EXIT_RUNTIME is not set, so halting execution but not exiting the runtime or preventing further async execution (build with EXIT_RUNTIME=1, if you want a true shutdown)');
     }
   } else {
 
@@ -7994,6 +8107,7 @@ if (Module['preInit']) {
 }
 
 
+  Module["noExitRuntime"] = true;
 
 run();
 
@@ -8004,68 +8118,4 @@ run();
 // {{MODULE_ADDITIONS}}
 
 
-
-// Copyright 2013 The Emscripten Authors.  All rights reserved.
-// Emscripten is available under two separate licenses, the MIT license and the
-// University of Illinois/NCSA Open Source License.  Both these licenses can be
-// found in the LICENSE file.
-
-if (typeof window === "object" && (typeof ENVIRONMENT_IS_PTHREAD === 'undefined' || !ENVIRONMENT_IS_PTHREAD)) {
-  function emrun_register_handlers() {
-    // When C code exit()s, we may still have remaining stdout and stderr messages in flight. In that case, we can't close
-    // the browser until all those XHRs have finished, so the following state variables track that all communication is done,
-    // after which we can close.
-    var emrun_num_post_messages_in_flight = 0;
-    var emrun_should_close_itself = false;
-    function postExit(msg) {
-      var http = new XMLHttpRequest();
-      http.onreadystatechange = function() {
-        if (http.readyState == 4 /*DONE*/) {
-          try {
-            // Try closing the current browser window, since it exit()ed itself. This can shut down the browser process
-            // and emrun does not need to kill the whole browser process.
-            if (typeof window !== 'undefined' && window.close) window.close();
-          } catch(e) {}
-        }
-      }
-      http.open("POST", "stdio.html", true);
-      http.send(msg);
-    }
-    function post(msg) {
-      var http = new XMLHttpRequest();
-      ++emrun_num_post_messages_in_flight;
-      http.onreadystatechange = function() {
-        if (http.readyState == 4 /*DONE*/) {
-          if (--emrun_num_post_messages_in_flight == 0 && emrun_should_close_itself) postExit('^exit^'+EXITSTATUS);
-        }
-      }
-      http.open("POST", "stdio.html", true);
-      http.send(msg);
-    }
-    // If the address contains localhost, or we are running the page from port 6931, we can assume we're running the test runner and should post stdout logs.
-    if (document.URL.search("localhost") != -1 || document.URL.search(":6931/") != -1) {
-      var emrun_http_sequence_number = 1;
-      var prevPrint = out;
-      var prevErr = err;
-      function emrun_exit() { if (emrun_num_post_messages_in_flight == 0) postExit('^exit^'+EXITSTATUS); else emrun_should_close_itself = true; };
-      Module['addOnExit'](emrun_exit);
-      out = function emrun_print(text) { post('^out^'+(emrun_http_sequence_number++)+'^'+encodeURIComponent(text)); prevPrint(text); }
-      err = function emrun_printErr(text) { post('^err^'+(emrun_http_sequence_number++)+'^'+encodeURIComponent(text)); prevErr(text); }
-
-      // Notify emrun web server that this browser has successfully launched the page.
-      post('^pageload^');
-    }
-  }
-
-  // POSTs the given binary data represented as a (typed) array data back to the emrun-based web server.
-  // To use from C code, call e.g. EM_ASM({emrun_file_dump("file.dat", HEAPU8.subarray($0, $0 + $1));}, my_data_pointer, my_data_pointer_byte_length);
-  function emrun_file_dump(filename, data) {
-    var http = new XMLHttpRequest();
-    out('Dumping out file "' + filename + '" with ' + data.length + ' bytes of data.');
-    http.open("POST", "stdio.html?file=" + filename, true);
-    http.send(data); // XXX  this does not work in workers, for some odd reason (issue #2681)
-  }
-
-  if (typeof Module !== 'undefined' && typeof document !== 'undefined') emrun_register_handlers();
-}
 

@@ -149,9 +149,9 @@ FourD = function(selector, options, default_settings, LayoutGraph){
   Vertex.prototype.paint = function(scene){
     this.object = new THREE.Group();
     this.object.position.set(
-      Math.random()*10,
-      Math.random()*10,
-      Math.random()*10
+      Math.random(),
+      Math.random(),
+      Math.random()
     );
     
     if(!this.options){
@@ -174,7 +174,7 @@ FourD = function(selector, options, default_settings, LayoutGraph){
       var cube = new Cube(this.options.cube);
 			cube.geometry.computeFaceNormals();
       this.object.add(cube);
-      cube.position.set(0, 0, 0);
+      cube.position.set(Math.random()*10, Math.random()*10, Math.random()*10);
 			cube.vertex = this;
     }
     if(this.options.label && this.options.label.text){
@@ -269,7 +269,7 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     console.assert(tgt, "tgt must not be undefined");
     console.assert(src !== tgt, "src and tgt should not be equal");
 
-    return this.add_edge(src, tgt, false);
+    return this.add_edge(src, tgt, false, 1.0);
   };
 
 
@@ -321,7 +321,12 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     console.assert(source, "target must not be undefined");
     console.assert(target, "target must not be undefined");
 
-    var edge = new Edge(this.g.add_edge(source.id, target.id, options.directed), source, target, options);
+    options = Object.assign({
+      directed: false,
+      strength: 1.0
+    }, options);
+
+    var edge = new Edge(this.g.add_edge(source.id, target.id, options.directed, options.strength), source, target, options);
     this.E.set(edge.id, edge);
     
     edge.paint(this.scene);
@@ -417,9 +422,9 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     var cube = new THREE.Mesh( geometry, material );
     var scale = 2;
     cube.position.set(
-      Math.random() * scale, 
-      Math.random() * scale,
-      Math.random() * scale
+      Math.random() * 10, 
+      Math.random() * 10,
+      Math.random() * 10
     );
     cube.matrixAutoUpdate = true;
     
@@ -466,11 +471,11 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     for(var v of this.V.values()){
       v.object.position.x = positions[i].x;
       v.object.position.y = positions[i].y;
-      v.object.position.z = positions[i++].z;
+      v.object.position.z = positions[i].z;
+      i++;
     }
 
-    for(var e of this.E.values()){
-      var edge = e;
+    for(var edge of this.E.values()){
       var source = edge.source.object.position;
       var target = edge.target.object.position;
 

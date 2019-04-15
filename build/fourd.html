@@ -10,7 +10,11 @@
       <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     </head>
     <body>
-      
+      <h2>fourd.wasm</h2>
+      <p>fourd.wasm is a rewrite of fourd.js in C++, compiled to web assembly.</p>
+      <p> Eventually this work will flow into <a href="https://www.npmjs.com/package/fourdsocketproxy">fourdsocketproxy</a></p>
+      <p>It still needs some work, as you'll see when you add the vertices by index (numbers from 0 to the number of vertices you entered, minus 1).</p>
+      <p>If at any point you get stuck, just reboot your computer. Lol, jk, hit refresh.</p>
 
       <div class="container well">
         <span class="col-md-6">
@@ -26,7 +30,7 @@
           
           <button 
             class="btn btn-primary" 
-            onclick="fourd.graph.add_edge(graph.V.get(parseInt(prompt('Source?'))), graph.V.get(parseInt(prompt('Target?'))), {color: 0xffffff});">
+            onclick="fourd.graph.add_edge(graph.V.get(parseInt(prompt('Source?'))), graph.V.get(parseInt(prompt('Target?'))), {color: 0xffffff, strength: 1.0});">
             +e
           </button>
         </div>
@@ -37,6 +41,7 @@
             attraction.value = fourd.graph.settings.attraction;
             epsilon.value = fourd.graph.settings.epsilon;
             friction.value = fourd.graph.settings.friction;
+            inner_distance.value = fourd.graph.settings.inner_distance;
             ">
           <label class="lbl form-label" for="repulsion">Repulsion
             <output 
@@ -47,7 +52,7 @@
           <input 
             class="range form-control" 
             value="fourd.graph.settings.repulsion" 
-            onchange="console.log(repulsion.value = fourd.graph.settings.repulsion = parseFloat(this.value));"
+            onchange="console.log(fourd.graph.settings.repulsion = parseFloat(this.value));"
             id="repulsion"
             type="range"
             min="0.0" 
@@ -63,7 +68,7 @@
           <input 
             class="range form-control" 
             value="fourd.graph.settings.attraction" 
-            onchange="console.log(attraction.value = fourd.graph.settings.attraction = parseFloat(this.value));"
+            onchange="console.log(fourd.graph.settings.attraction = parseFloat(this.value));"
             id="attraction" 
             type="range" 
             min="0.0" 
@@ -79,7 +84,7 @@
           <input 
             class="range form-control" 
             value="fourd.graph.settings.epsilon" 
-            onchange="console.log(epsilon.value = fourd.graph.settings.epsilon = parseFloat(this.value));"
+            onchange="console.log(fourd.graph.settings.epsilon = parseFloat(this.value));"
             id="epsilon" 
             type="range" 
             min="0.0" 
@@ -95,7 +100,7 @@
             <input 
               class="range form-control" 
               value="fourd.graph.settings.friction" 
-              onchange="console.log(friction.value = fourd.graph.settings.friction = parseFloat(this.value));"
+              onchange="console.log(fourd.graph.settings.friction = parseFloat(this.value));"
               id="friction" 
               type="range" 
               min="0.0" 
