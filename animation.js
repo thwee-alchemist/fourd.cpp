@@ -1,4 +1,4 @@
-FourD = function(selector, options, default_settings, CppGraph){
+FourD = function(selector, options, default_settings, LayoutGraph){
   var that = this;
   var CONSTANTS = {
     width: 1000,
@@ -258,7 +258,7 @@ FourD = function(selector, options, default_settings, CppGraph){
     this.edge_counts = {};
 
     this.settings = default_settings();
-    const graph = new CppGraph(this.settings);
+    const graph = new LayoutGraph(this.settings);
     this.g = graph;
   };
 
@@ -269,7 +269,7 @@ FourD = function(selector, options, default_settings, CppGraph){
     console.assert(tgt, "tgt must not be undefined");
     console.assert(src !== tgt, "src and tgt should not be equal");
 
-    return this.add_edge(src, tgt, false);
+    return this.add_edge(src, tgt, false, 1.0);
   };
 
 
@@ -321,16 +321,13 @@ FourD = function(selector, options, default_settings, CppGraph){
     console.assert(source, "target must not be undefined");
     console.assert(target, "target must not be undefined");
 
-    var key = '_' + source.id + '_' + target.id;
-    var edge;
-    
-    if(!this.edge_counts.hasOwnProperty(key)){
-      edge = new Edge(this.g.add_edge(source.id, target.id, options.directed), source, target, options);
-      this.E.set(edge.id, edge);
-      this.edge_counts[key] = 1;
-    }else{
-      this.edge_counts[key]++
-    }
+    options = Object.assign({
+      directed: false,
+      strength: 1.0
+    }, options);
+
+    var edge = new Edge(this.g.add_edge(source.id, target.id, options.directed, options.strength), source, target, options);
+    this.E.set(edge.id, edge);
     
     edge.paint(this.scene);
     return edge;
@@ -491,34 +488,9 @@ FourD = function(selector, options, default_settings, CppGraph){
       edge.object.geometry.vertices[1].z = target.z;
 
       edge.object.geometry.verticesNeedUpdate = true;
-      edge.object.geometry.computeBoundingSphere();
+      //edge.object.geometry.computeBoundingSphere();
     }
   };
-	
-	Graph.prototype.add_cycle = function(vertices){
-		var edges = [];
-		for(var i=0; i<vertex_options.length; i++){
-			vertices.push(this.add_vertex(vertex_options[i]));
-			if(i>0){
-				edges.push(this.add_edge(vertices[i-1], vertices[i]));
-			}
-		}
-		edges.push(this.add_edge(vertices[0], vertices[vertices.length-1]), false);
-		
-		return {
-			vertices: vertices,
-			edges: edges
-		};
-	};
-	
-	Graph.prototype.remove_cycle = function(cycle){
-		for(var i=0; i<cycle.edges.length; i++){
-			this.remove_edge(cycle.edges[i]);
-		}
-		for(var i=0; i<cycle.vertices.length; i++){
-			this.remove_vertex(cycle.vertices[i]);
-		}
-	};
 
   FourD.prototype.select = function(vertex){
 		if(!vertex) return;
