@@ -104,6 +104,10 @@ class Randomator {
 
 class Edge;
 
+float length(gmtl::Vec3f v){
+  return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+}
+
 class Vertex {
   public:
   
@@ -112,7 +116,8 @@ class Vertex {
       position = gmtl::Vec3f(ra.get(), ra.get(), ra.get());
       
       id = vertex_id;
-
+      attraction_forces = gmtl::Vec3f(0.0f, 0.0f, 0.0f);
+      repulsion_forces = gmtl::Vec3f(0.0f, 0.0f, 0.0f);
     }
 
     int id;
@@ -125,7 +130,6 @@ class Vertex {
   
     static gmtl::Vec3f pairwise_repulsion(const gmtl::Vec3f& one, const gmtl::Vec3f& other, Settings* settings){
       gmtl::Vec3f diff = one - other;
-      // gmtl::Vec3f diff = *(this->position) - *(other->position);
       float abs_diff = length(diff);
       return  (settings->repulsion / 
                ((settings->epsilon + abs_diff)*(settings->epsilon + abs_diff)) * 
@@ -162,6 +166,8 @@ class Edge {
       directed = _directed;
       strength = _strength;
       id = edge_id;
+      source = _source;
+      target = _target;
     };
 
     int id;
@@ -179,10 +185,6 @@ class Edge {
     bool operator==(const Edge& other){
       return id == other.id;
     }
-
-    ~Edge(){
-
-    }
 };
 
 
@@ -196,7 +198,7 @@ class Edge {
 */
 class BarnesHutNode3 {
   public:
-    vector<Vertex> inners; // should probably be a pointer
+    vector<Vertex*> inners; // should probably be a pointer
     map<string, BarnesHutNode3*> outers;
     gmtl::Vec3f center_sum;
     int count;
@@ -217,23 +219,23 @@ class BarnesHutNode3 {
       return this->center_sum / (float)this->count;
     }
   
-    void place_inner(Vertex& vertex){
+    void place_inner(Vertex* vertex){
       this->inners.push_back(vertex);
-      this->center_sum += vertex.position;
+      this->center_sum += vertex->position;
     }
   
-    void place_outer(Vertex& vertex){
-      string octant = this->get_octant(vertex.position);
+    void place_outer(Vertex* vertex){
+      string octant = this->get_octant(vertex->position);
       this->outers[octant] = new BarnesHutNode3(settings);
       this->outers[octant]->insert(vertex);
     }
   
-    void insert(Vertex& vertex){
+    void insert(Vertex* vertex){
       if(this->inners.size() == 0){
         this->place_inner(vertex);
       }else{
         gmtl::Vec3f center = this->center();
-        gmtl::Vec3f pos = vertex.position;
+        gmtl::Vec3f pos = vertex->position;
         float distance = sqrt((center[0] - pos[0])*(center[0] - pos[0]) + 
                              (center[1] - pos[1])*(center[1] - pos[1]) +
                              (center[2] - pos[2])*(center[2] - pos[2]));
@@ -256,21 +258,21 @@ class BarnesHutNode3 {
       return x+y+z;
     }
   
-    void estimate(Vertex& vertex, gmtl::Vec3f& force, gmtl::Vec3f (*force_fn)(const gmtl::Vec3f& p1, const gmtl::Vec3f& p2, Settings* settings), Settings* settings){
+    void estimate(Vertex* vertex, gmtl::Vec3f& force, gmtl::Vec3f (*force_fn)(const gmtl::Vec3f& p1, const gmtl::Vec3f& p2, Settings* settings), Settings* settings){
       gmtl::Vec3f f;
       if(find(this->inners.begin(), this->inners.end(), vertex) != this->inners.end()){
         for(auto i=0; i<this->inners.size(); i++){
-          if(this->inners[i].id != vertex.id){
-            f = force_fn(vertex.position, this->inners[i].position, settings);
+          if(this->inners[i]->id != vertex->id){
+            f = force_fn(vertex->position, this->inners[i]->position, settings);
             force += f;
           }
         }
       }else{
-        force += force_fn(vertex.position, this->center(), settings) * (float)this->inners.size();
+        force += force_fn(vertex->position, this->center(), settings) * (float)this->inners.size();
       }
       
       for(auto &it : this->outers){
-        this->outers[it.first]->estimate(vertex, force, force_fn, settings);
+        it.second->estimate(vertex, force, force_fn, settings);
       }
     }
   
@@ -292,8 +294,7 @@ class LayoutGraph {
     };
   
     int add_vertex(){
-      Vertex vertex(++vertex_id);
-      V.push_back(vertex);
+      V.push_back(new Vertex(++vertex_id));
       return vertex_id;
     }
   
@@ -302,23 +303,23 @@ class LayoutGraph {
       Vertex* tgt;
       
       for(int i=0; i<V.size(); i++){
-        if(V[i].id == source){
-          src = &V[i];
+        if(V[i]->id == source){
+          src = V[i];
         }
-        if(V[i].id == target){
-          tgt = &V[i];
+        if(V[i]->id == target){
+          tgt = V[i];
         }
       }
 
-      E.push_back(Edge(++edge_id, src, tgt, directed, strength));
+      E.push_back(new Edge(++edge_id, src, tgt, directed, strength));
       return edge_id;
     }
   
-    void remove_vertex(Vertex vertex){
+    void remove_vertex(Vertex* vertex){
       V.erase(find(V.begin(), V.end(), vertex));
     }
   
-    void remove_edge(Edge edge){
+    void remove_edge(Edge* edge){
       E.erase(find(E.begin(), E.end(), edge));
     }
   
@@ -327,10 +328,10 @@ class LayoutGraph {
       
       BarnesHutNode3 tree(settings);
 
-      for(Vertex& vertex : this->V){
-        vertex.acceleration = gmtl::Vec3f();
-        vertex.repulsion_forces = gmtl::Vec3f();
-        vertex.attraction_forces = gmtl::Vec3f();
+      for(Vertex* vertex : this->V){
+        vertex->acceleration = gmtl::Vec3f(0.0f, 0.0f, 0.0f);
+        vertex->repulsion_forces = gmtl::Vec3f(0.0f, 0.0f, 0.0f);
+        vertex->attraction_forces = gmtl::Vec3f(0.0f, 0.0f, 0.0f);
         tree.insert(vertex);
       }
  
@@ -338,37 +339,31 @@ class LayoutGraph {
       gmtl::Vec3f tp; // target position
       float distance;
       gmtl::Vec3f gravity;
-      gmtl::Vec3f attraction;
 
       // calculate repulsion
-      for(Vertex& vertex : this->V){
+      for(Vertex* vertex : this->V){
         tree.estimate(
           vertex,
-          vertex.repulsion_forces,
+          vertex->repulsion_forces,
           &Vertex::pairwise_repulsion, 
           settings);
       }
 
       // calculate attraction
-      for(const Edge& edge : this->E){
-        attraction = (edge.source->position - edge.target->position) * (-1 * settings->attraction);
-        sp = edge.source->position;
-        tp = edge.target->position;
+      for(Edge* edge : this->E){
+        gmtl::Vec3f attraction = (edge->source->position - edge->target->position) * (-1 * settings->attraction);
+        
+        if(edge->directed){
+          float distance = length(edge->source->position - edge->target->position);
 
-        distance = sqrt((sp[0] - tp[0])*(sp[0] - tp[0]) + 
-                        (sp[1] - tp[1])*(sp[1] - tp[1]) +
-                        (sp[2] - tp[2])*(sp[2] - tp[2]));
-
-        if(edge.directed){
-          gmtl::Vec3f distance = edge.source->position - edge.target->position;
-          gmtl::Vec3f gravity(0, 0, settings->gravity);
-          attraction += gravity;
+          gmtl::Vec3f gravity(0, settings->gravity, 0);
+          attraction += gravity * distance;
         }
 
-        attraction *= edge.strength;
-
-        edge.source->attraction_forces -= attraction;
-        edge.target->attraction_forces += attraction;
+        attraction = attraction * edge->strength;
+        
+        edge->source->attraction_forces = (attraction * -1.0f);
+        edge->target->attraction_forces = attraction;
       }
       
       // update vertices
@@ -376,12 +371,17 @@ class LayoutGraph {
       gmtl::Vec3f friction;
 
       s << "[" << endl;
-      for(Vertex& vertex : V){
-        friction = vertex.velocity * settings->friction;
-        vertex.acceleration += (vertex.repulsion_forces - vertex.attraction_forces) - friction;
-        vertex.velocity += vertex.acceleration;
-        vertex.position += vertex.velocity;
-        s << "{\"x\":" << vertex.get_x() << ", \"y\":" << vertex.get_y() << ", \"z\":" << vertex.get_z() << "}";
+      for(Vertex* vertex : V){
+        
+        friction = vertex->velocity * settings->friction;
+
+        // cout << "vertex (" << vertex->id << ") attraction: " << vertex->attraction_forces << endl;
+        // cout << "vertex (" << vertex->id << ") repulsion : " << vertex->repulsion_forces << endl;
+
+        vertex->acceleration += (vertex->repulsion_forces - vertex->attraction_forces) - friction;
+        vertex->velocity += vertex->acceleration;
+        vertex->position += vertex->velocity;
+        s << "{\"x\":" << vertex->get_x() << ", \"y\":" << vertex->get_y() << ", \"z\":" << vertex->get_z() << "}";
         if(!(vertex == V.back())){
           s << ",";
         }
@@ -394,24 +394,25 @@ class LayoutGraph {
     }
 
     Vertex get_v(int i) const {
-      return V[i];
+      return *V[i];
     }
 
     long vertex_count() const{
       return (long)V.size();
     }
 
-    int vertex_id = 0;
-    int edge_id = 0;
-    vector<Vertex> V;
-    vector<Edge> E;
+    int vertex_id;
+    int edge_id;
+    vector<Vertex*> V;
+    vector<Edge*> E;
     Settings* settings;
 };
 
-
+/*
 gmtl::Vec3f avg_position(const LayoutGraph&);
 vector<gmtl::Vec3f> average_positions(int, int, int, Settings*);
-/*
+
+
 class Experiment {
   public:
     Experiment(float& _variable, const std::vector<float>& _values, Settings* settings){
@@ -435,7 +436,7 @@ class Experiment {
     static gmtl::Vec3f avg_position(const LayoutGraph& graph){
       gmtl::Vec3f position;
       for(auto vertex : graph.V){
-        position += vertex.position;
+        position += vertex->position;
       }
       return position / (float)graph.V.size();
     }
@@ -470,12 +471,9 @@ Settings* default_settings(){
   float _repulsion = 4.1;
   float _epsilon = 0.1;
   float _inner_distance = 0.36;
-  float _attraction = 0.0005;
+  float _attraction = 0.5;
   float _friction = 0.1;
   float _gravity = 10;
-
-  float _min_start_pos = -1.0f;
-  float _max_start_pos = 1.0f;
 
   return new Settings(
     _repulsion, 
@@ -507,10 +505,10 @@ EMSCRIPTEN_BINDINGS(fourd){
   emscripten::class_<LayoutGraph>("LayoutGraph")
     .constructor<Settings*>()
     .function("add_vertex", &LayoutGraph::add_vertex)
-    .function("add_edge", &LayoutGraph::add_edge)
-    .function("remove_vertex", &LayoutGraph::remove_vertex)
-    .function("remove_edge", &LayoutGraph::remove_edge)
-    .function("layout", &LayoutGraph::layout)
+    .function("add_edge", &LayoutGraph::add_edge, allow_raw_pointers())
+    .function("remove_vertex", &LayoutGraph::remove_vertex, allow_raw_pointers())
+    .function("remove_edge", &LayoutGraph::remove_edge, allow_raw_pointers())
+    .function("layout", &LayoutGraph::layout, allow_raw_pointers())
     .property("vertex_count", &LayoutGraph::vertex_count)
     .function("get_v", &LayoutGraph::get_v);
   emscripten::function("default_settings", &default_settings, allow_raw_pointers());
@@ -576,7 +574,7 @@ class Main {
 int main(int argc, char** argv){
   cout << "Welcome to fourd.cpp, the meat and bones of social cartography..." << endl;
 
-  for(auto v : {100, 1000, 2500, 5000, 7500, 10000}){
+  for(auto v : {100, 1000, 2500, 5000}){
     Main::run(v, v*3);
   }
 }
