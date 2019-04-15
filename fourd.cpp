@@ -120,10 +120,8 @@ class Vertex {
     gmtl::Vec3f velocity;
     gmtl::Vec3f acceleration;
   
-    gmtl::Vec3f repulsion_forces;
     gmtl::Vec3f attraction_forces;
-
-    vector<Edge*> edges;
+    gmtl::Vec3f repulsion_forces;
   
     static gmtl::Vec3f pairwise_repulsion(const gmtl::Vec3f& one, const gmtl::Vec3f& other, Settings* settings){
       gmtl::Vec3f diff = one - other;
@@ -161,12 +159,6 @@ class Vertex {
 class Edge {
   public:
     Edge(int edge_id, Vertex* _source, Vertex* _target, bool _directed=false){
-      source = _source;
-      source->edges.push_back(this);
-
-      target = _target;
-      target->edges.push_back(this);
-
       directed = _directed;
 
       id = edge_id;
@@ -188,8 +180,7 @@ class Edge {
     }
 
     ~Edge(){
-      source->edges.erase(find(source->edges.begin(), source->edges.end(), this));
-      target->edges.erase(find(target->edges.begin(), target->edges.end(), this));
+
     }
 };
 
@@ -291,9 +282,9 @@ class BarnesHutNode3 {
     }
 };
 
-class Graph {
+class LayoutGraph {
   public:
-    Graph(Settings* _settings){
+    LayoutGraph(Settings* _settings){
       vertex_id = -1;
       edge_id = -1;
       settings = _settings;
@@ -334,6 +325,7 @@ class Graph {
       // calculate repulsions
       
       BarnesHutNode3 tree(settings);
+
       for(Vertex& vertex : this->V){
         vertex.acceleration = gmtl::Vec3f();
         vertex.repulsion_forces = gmtl::Vec3f();
@@ -357,7 +349,7 @@ class Graph {
       }
 
       // calculate attraction
-      for(Edge& edge : this->E){
+      for(const Edge& edge : this->E){
         attraction = (edge.source->position - edge.target->position) * (-1 * settings->attraction);
         sp = edge.source->position;
         tp = edge.target->position;
@@ -414,9 +406,9 @@ class Graph {
 };
 
 
-gmtl::Vec3f avg_position(const Graph&);
+gmtl::Vec3f avg_position(const LayoutGraph&);
 vector<gmtl::Vec3f> average_positions(int, int, int, Settings*);
-
+/*
 class Experiment {
   public:
     Experiment(float& _variable, const std::vector<float>& _values, Settings* settings){
@@ -437,7 +429,7 @@ class Experiment {
       return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
     }
 
-    static gmtl::Vec3f avg_position(const Graph& graph){
+    static gmtl::Vec3f avg_position(const LayoutGraph& graph){
       gmtl::Vec3f position;
       for(auto vertex : graph.V){
         position += vertex.position;
@@ -447,7 +439,7 @@ class Experiment {
 
     static std::vector<gmtl::Vec3f> average_positions(int iterations, int vertices, int edges, Settings* settings){
       vector<gmtl::Vec3f> history;
-      Graph h(settings);
+      LayoutGraph h(settings);
       for(int i=0; i<vertices; i++){
         h.add_vertex();
       }
@@ -469,9 +461,10 @@ class Experiment {
       return history;
     }
 };
+*/
 
 Settings* default_settings(){
-  float _repulsion = 50.0;
+  float _repulsion = 4.1;
   float _epsilon = 0.1;
   float _inner_distance = 0.36;
   float _attraction = 0.0005;
@@ -508,15 +501,15 @@ EMSCRIPTEN_BINDINGS(fourd){
     .property("x", &Vertex::get_x)
     .property("y", &Vertex::get_y)
     .property("z", &Vertex::get_z);
-  emscripten::class_<Graph>("Graph")
+  emscripten::class_<LayoutGraph>("LayoutGraph")
     .constructor<Settings*>()
-    .function("add_vertex", &Graph::add_vertex)
-    .function("add_edge", &Graph::add_edge)
-    .function("remove_vertex", &Graph::remove_vertex)
-    .function("remove_edge", &Graph::remove_edge)
-    .function("layout", &Graph::layout)
-    .property("vertex_count", &Graph::vertex_count)
-    .function("get_v", &Graph::get_v);
+    .function("add_vertex", &LayoutGraph::add_vertex)
+    .function("add_edge", &LayoutGraph::add_edge)
+    .function("remove_vertex", &LayoutGraph::remove_vertex)
+    .function("remove_edge", &LayoutGraph::remove_edge)
+    .function("layout", &LayoutGraph::layout)
+    .property("vertex_count", &LayoutGraph::vertex_count)
+    .function("get_v", &LayoutGraph::get_v);
   emscripten::function("default_settings", &default_settings, allow_raw_pointers());
 }
 #endif
@@ -535,7 +528,7 @@ class Main {
 
       cout << "Creating Settings ... ";
       cout << "Creating graph ... ";
-      Graph graph(default_settings());
+      LayoutGraph graph(default_settings());
       cout << "done." << endl;
 
       cout << "Adding " << NUM_VERTICES << " vertices ... ";
@@ -553,7 +546,7 @@ class Main {
         }
 
         if(target != source){
-          graph.add_edge(source, target);
+          graph.add_edge(source, target, false);
         }
       }
       cout << "done." << endl;
@@ -576,9 +569,7 @@ class Main {
       auto stop2 = std::chrono::high_resolution_clock::now();
     }
 };
-*/
 
-/*
 int main(int argc, char** argv){
   cout << "Welcome to fourd.cpp, the meat and bones of social cartography..." << endl;
 
@@ -586,5 +577,4 @@ int main(int argc, char** argv){
     Main::run(v, v*3);
   }
 }
-
 */
