@@ -11,11 +11,20 @@
     </head>
     <body>
       <h2>fourd.wasm</h2>
-      <p>fourd.wasm is a rewrite of fourd.js in C++, compiled to web assembly.</p>
+      <p>fourd.wasm is a rewrite of <a href="https://github.com/thwee-alchemist/FourDSocketProxy/blob/master/lib/fourd.js">fourd.js</a> in <a href="https://github.com/thwee-alchemist/fourd.cpp/blob/gh-pages/fourd.cpp">C++</a>, compiled to web assembly.</p>
       <p> Eventually this work will flow into <a href="https://www.npmjs.com/package/fourdsocketproxy">fourdsocketproxy</a></p>
-      <p>It still needs some work, as you'll see when you add the vertices by index (numbers from 0 to the number of vertices you entered, minus 1).</p>
-      <p>If at any point you get stuck, just reboot your computer. Lol, jk, hit refresh.</p>
+      <p>To see this animation in action: 
+        <ol>
+          <li>Click +v twice.</li>
+          <li>Click +e once</li>
+          <li>Enter 0 (zero) when prompted for the edge's source.</li>
+          <li>Enter 1 (one) when prompted for the edge's target.</li>
+          <li>Carefully play with the values below. (The fourd.graph.settings object lets you set these values via the console.)</li>
+          <li>When it breaks, hit refresh</li>
+          <li class="warning">This animation may cause seizures!</li>
+        </ol>
 
+      </p>
       <div class="container well">
         <span class="col-md-6">
             <div class="display"></div>
