@@ -4,10 +4,9 @@
       <meta charset="utf-8">
       <title>fourd.wasm</title>
       <meta author="joshua.moore@leudla.net">
-      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-      <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+      <link rel="stylesheet" href="bootstrap.min.css">"
+      <link rel="stylesheet" href="bootstrap-slider.min.css">
+      <link rel="stylesheet" href="fourd.css">
     </head>
     <body>
       <h2>fourd.wasm</h2>
@@ -51,13 +50,6 @@
         </div>
 
         <div class="well col-md-6">
-          <form oninput="
-            repulsion.value = fourd.graph.settings.repulsion;
-            attraction.value = fourd.graph.settings.attraction;
-            epsilon.value = fourd.graph.settings.epsilon;
-            friction.value = fourd.graph.settings.friction;
-            inner_distance.value = fourd.graph.settings.inner_distance;
-            ">
           <label class="lbl form-label" for="repulsion">Repulsion</label>
           <output 
             id="repulsion-output"
@@ -66,14 +58,7 @@
             </output><br>
           <input 
             id="repulsion-input"
-            class="range" 
-            value="fourd.graph.settings.repulsion" 
-            onchange="console.log(fourd.graph.settings.repulsion = parseFloat(this.value));"
-            id="repulsion"
-            type="range"
-            min="0.0" 
-            max="1.0" 
-            step="0.000001">
+            class="range">
           <br> 
 
           <label class="lbl form-label" for="attraction">Attraction: </label>
@@ -83,33 +68,19 @@
             value="fourd.graph.settings.attraction"">
             </output><br>
           <input 
-            id="attraction-output"
-            class="range" 
-            value="fourd.graph.settings.attraction" 
-            onchange="console.log(fourd.graph.settings.attraction = parseFloat(this.value));"
-            id="attraction" 
-            type="range" 
-            min="0.0" 
-            max="1.0" 
-            step="0.0001">
+            id="attraction-input"
+            class="range" >
             <br>
 
           <label class="lbl form-label" for="epsilon">Epsilon: </label>
           <output
-            id="epsilon-ouput"
+            id="epsilon-output"
             name="epsilon"
             value="fourd.graph.settings.epsilon">
             </output><br>
           <input 
             id="epsilon-input"
-            class="range" 
-            value="fourd.graph.settings.epsilon" 
-            onchange="console.log(fourd.graph.settings.epsilon = parseFloat(this.value));"
-            id="epsilon" 
-            type="range" 
-            min="0.0" 
-            max="1.0" 
-            step="0.000001">
+            class="range">
             <br>
 
           <label class="lbl form-label" for="friction">Friction</label>
@@ -120,14 +91,7 @@
             </output><br>
           <input
             id="friction-input"
-            class="range" 
-            value="fourd.graph.settings.friction" 
-            onchange="console.log(fourd.graph.settings.friction = parseFloat(this.value));"
-            id="friction" 
-            type="range" 
-            min="0.0" 
-            max="1.0" 
-            step="0.000001">
+            class="range">
             <br>
 
           <label class="lbl form-label" for="inner_distance">Inner Distance</label>
@@ -138,21 +102,19 @@
             </output><br>
           <input 
             id="inner-distance-input"
-            class="range" 
-            value="fourd.graph.settings.inner_distance" 
-            onchange="console.log(inner_distance.value = fourd.graph.settings.inner_distance = parseFloat(this.value));"
-            id="inner_distance" 
-            type="range" 
-            min="0.0" 
-            max="1.0" 
-            step="-.000001"><br>
-          </form>
+            class="range">
+          <br>
         </div>
       </div>
+
+      <script src="jquery-3.4.0.min.js"></script>
+      <script src="jquery-ui.1.12.1.min.js"></script>
+      <script src="popper.min.js"></script>
+      <script src="bootstrap.min.js"></script>
+      <script src="bootstrap-slider.min.js"></script>
       <script src="r103.three.min.js"></script>
       <script src="OrbitControls.js"></script>
       <script src="fourd.js"></script>
-      <script src="jquery-1.11.3.min.js"></script>
       <script src="animation.js"></script>
 
       <script>
@@ -208,20 +170,39 @@ Module.onRuntimeInitialized = _ => {
   fourd.graph.settings.epsilon = 0.0001;
   fourd.graph.settings.inner_distance = 3.6;
 
-  var bindIO = function(inputSel, outputSel){
-    $(outputSel).val($(inputSel).val());
-    $(inputSel).change(() => {
-      $(outputSel).val($(inputSel).val());
-    });
+  var range = function(min, max, step){
+    var r = [];
+    for(var i=min; i<max; i+=step){
+      r.push(i);
+    }
+
+    return r;
   };
 
-  bindIO('#repulsion-input', '#repulsion-output');
-  bindIO('#attraction-input', '#attraction-output');
-  bindIO('#friction-input', '#friction-output');
-  bindIO('#epsilon-input', '#epsilon-output');
-  bindIO('#inner-distance-input', '#inner-distance-output');
+  var bindIO = function(inputSel, outputSel, variable_name){
+    console.log(inputSel, fourd.graph.settings[variable_name]);
+    var slider = new Slider(inputSel, {
+      ticks: range(-5, 5, 1),
+      ticks_labels: range(-5, 5, 1).map(v => `10^${v}`),
+      ticks_snap_bounds: 10,
+      value: Math.log10(fourd.graph.settings[variable_name]),
+    });
+    slider.on('change', (e) => {
+      console.log(e);
+      var value = e.newValue;
+      fourd.graph.settings[variable_name] = parseFloat(`1e${value}`);
+      $(outputSel)[0].value = fourd.graph.settings[variable_name];
+      console.log(fourd.graph.settings[variable_name]);
+    });
+    $(inputSel)[0].value = Math.log10(fourd.graph.settings[variable_name]);
+    $(outputSel)[0].value = fourd.graph.settings[variable_name];
+  };
 
-  console.log(graph.vertex_count);
+  bindIO('#repulsion-input', '#repulsion-output', 'repulsion');
+  bindIO('#attraction-input', '#attraction-output', 'attraction');
+  bindIO('#friction-input', '#friction-output', 'friction');
+  bindIO('#epsilon-input', '#epsilon-output', 'epsilon');
+  bindIO('#inner-distance-input', '#inner-distance-output', 'inner_distance');
 };
         </script>
     </body>
