@@ -3,7 +3,7 @@ FourD = function(selector, options, default_settings, LayoutGraph){
   var CONSTANTS = {
     width: 1000,
     attraction: 0.05,
-    far: 1000,
+    far: 100000,
     optimal_distance: 10.0,
     minimum_velocity: 0.001,
     friction: 0.60,
@@ -524,6 +524,11 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     requestAnimationFrame(render);
 
     graph.layout();
+    /*
+    camera.position.x = graph.g.center_x();
+    camera.position.y = graph.g.center_y();
+    camera.position.z = graph.g.center_z() - 500;
+    */
     controls.update(clock.getDelta());
 
     for(var i=0; i<Label.all.length; i++){

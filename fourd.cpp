@@ -334,6 +334,8 @@ class LayoutGraph {
         vertex->attraction_forces = gmtl::Vec3f(0.0f, 0.0f, 0.0f);
         tree.insert(vertex);
       }
+
+      center = tree.center();
  
       gmtl::Vec3f sp; // source position
       gmtl::Vec3f tp; // target position
@@ -406,6 +408,19 @@ class LayoutGraph {
     vector<Vertex*> V;
     vector<Edge*> E;
     Settings* settings;
+    gmtl::Vec3f center;
+
+    float center_x(){
+      return center[0];
+    }
+
+    float center_y(){
+      return center[1];
+    }
+
+    float center_z(){
+      return center[2];
+    }
 };
 
 /*
@@ -510,7 +525,10 @@ EMSCRIPTEN_BINDINGS(fourd){
     .function("remove_edge", &LayoutGraph::remove_edge, allow_raw_pointers())
     .function("layout", &LayoutGraph::layout, allow_raw_pointers())
     .property("vertex_count", &LayoutGraph::vertex_count)
-    .function("get_v", &LayoutGraph::get_v);
+    .function("get_v", &LayoutGraph::get_v)
+    .function("center_x", &LayoutGraph::center_x)
+    .function("center_y", &LayoutGraph::center_y)
+    .function("center_z", &LayoutGraph::center_z);
   emscripten::function("default_settings", &default_settings, allow_raw_pointers());
 }
 #endif
