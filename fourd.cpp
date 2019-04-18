@@ -132,8 +132,8 @@ class Vertex {
       gmtl::Vec3f diff = one - other;
       float abs_diff = length(diff);
       return  (settings->repulsion / 
-               ((settings->epsilon + abs_diff)*(settings->epsilon + abs_diff)) * 
-               (diff / abs_diff));
+               ((settings->epsilon + abs_diff)*(settings->epsilon + abs_diff))) * 
+               (diff / abs_diff);
     }
 
     float get_x() const {
@@ -322,7 +322,7 @@ class LayoutGraph {
     void remove_edge(Edge* edge){
       E.erase(find(E.begin(), E.end(), edge));
     }
-  
+
     string layout(){
       // calculate repulsions
       
@@ -362,8 +362,8 @@ class LayoutGraph {
 
         attraction = attraction * edge->strength;
         
-        edge->source->attraction_forces = (attraction * -1.0f);
-        edge->target->attraction_forces = attraction;
+        edge->source->attraction_forces -= attraction;
+        edge->target->attraction_forces += attraction;
       }
       
       // update vertices
@@ -378,7 +378,7 @@ class LayoutGraph {
         // cout << "vertex (" << vertex->id << ") attraction: " << vertex->attraction_forces << endl;
         // cout << "vertex (" << vertex->id << ") repulsion : " << vertex->repulsion_forces << endl;
 
-        vertex->acceleration += (vertex->repulsion_forces - vertex->attraction_forces) - friction;
+        vertex->acceleration = (vertex->repulsion_forces - vertex->attraction_forces) - friction;
         vertex->velocity += vertex->acceleration;
         vertex->position += vertex->velocity;
         s << "{\"x\":" << vertex->get_x() << ", \"y\":" << vertex->get_y() << ", \"z\":" << vertex->get_z() << "}";

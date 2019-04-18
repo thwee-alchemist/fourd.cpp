@@ -5,9 +5,12 @@
       <title>fourd.wasm</title>
       <meta author="joshua.moore@leudla.net">
       <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+      <link rel="stylesheet" href="/bootstrap-slider.min.css">
+      <link rel="stylesheet" href="fourd.css">
       <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
       <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+      <script src="/bootstrap-slider.min.js"></script>
     </head>
     <body>
       <h2>fourd.wasm</h2>
@@ -42,95 +45,71 @@
             onclick="fourd.graph.add_edge(graph.V.get(parseInt(prompt('Source?'))), graph.V.get(parseInt(prompt('Target?'))), {color: 0xffffff, strength: 1.0});">
             +e
           </button>
+
+          <button
+            class="btn btn-primary"
+            onclick="makeCube(fourd, parseInt(prompt('How big a cube do you want? Try 3')));">
+            +cube
+          </button>
         </div>
 
         <div class="well col-md-6">
           <form oninput="
-            repulsion.value = fourd.graph.settings.repulsion;
-            attraction.value = fourd.graph.settings.attraction;
-            epsilon.value = fourd.graph.settings.epsilon;
-            friction.value = fourd.graph.settings.friction;
-            inner_distance.value = fourd.graph.settings.inner_distance;
             ">
-          <label class="lbl form-label" for="repulsion">Repulsion
-            <output 
-              name="repulsion"
-              value="fourd.graph.settings.repulsion">
-            </output>
-          </label>
+          <label class="lbl form-label" for="repulsion">Repulsion</label>
+          <output 
+            id="repulsion-output"
+            name="repulsion"
+            value="fourd.graph.settings.repulsion">
+            </output><br>
           <input 
-            class="range form-control" 
-            value="fourd.graph.settings.repulsion" 
-            onchange="console.log(fourd.graph.settings.repulsion = parseFloat(this.value));"
-            id="repulsion"
-            type="range"
-            min="0.0" 
-            max="50.0" 
-            step=".1"> 
+            id="repulsion-input"
+            class="range text" 
+            id="repulsion">
+            <br> 
 
-          <label class="lbl form-label" for="attraction">Attraction: 
-            <output
-              name="attraction"
-              value="fourd.graph.settings.attraction"">
-            </output>
-          </label>
+          <label class="lbl form-label" for="attraction">Attraction: </label>
+          <output
+            id="attraction-output"
+            name="attraction"
+            value="fourd.graph.settings.attraction"">
+            </output><br>
           <input 
-            class="range form-control" 
-            value="fourd.graph.settings.attraction" 
-            onchange="console.log(fourd.graph.settings.attraction = parseFloat(this.value));"
-            id="attraction" 
-            type="range" 
-            min="0.0" 
-            max="50.0" 
-            step=".1">
+            id="attraction-input"
+            class="range">
+            <br>
 
-          <label class="lbl form-label" for="epsilon">Epsilon
-            <output
-              name="epsilon"
-              value="fourd.graph.settings.epsilon"">
-            </output>
-          </label>
+          <label class="lbl form-label" for="epsilon">Epsilon: </label>
+          <output
+            id="epsilon-output"
+            name="epsilon"
+            value="fourd.graph.settings.epsilon">
+            </output><br>
           <input 
-            class="range form-control" 
-            value="fourd.graph.settings.epsilon" 
-            onchange="console.log(fourd.graph.settings.epsilon = parseFloat(this.value));"
-            id="epsilon" 
-            type="range" 
-            min="0.0" 
-            max="10.0" 
-            step=".1">
+            id="epsilon-input"
+            class="range" 
+            step="1">
+            <br>
 
-          <label class="lbl form-label" for="friction">Friction
-              <output
-                name="friction"
-                value="fourd.graph.settings.friction"">
-              </output>
-            </label>
-            <input 
-              class="range form-control" 
-              value="fourd.graph.settings.friction" 
-              onchange="console.log(fourd.graph.settings.friction = parseFloat(this.value));"
-              id="friction" 
-              type="range" 
-              min="0.0" 
-              max="1.0" 
-              step=".1">
+          <label class="lbl form-label" for="friction">Friction</label>
+          <output
+            id="friction-output"
+            name="friction">
+            </output><br>
+          <input
+            id="friction-input"
+            class="range">
+            <br>
 
-          <label class="lbl form-label" for="inner_distance">Inner Distance
-              <output
-                name="inner_distance"
-                value="fourd.graph.settings.inner_distance"">
-              </output>
-            </label>
-            <input 
-              class="range form-control" 
-              value="fourd.graph.settings.inner_distance" 
-              onchange="console.log(inner_distance.value = fourd.graph.settings.inner_distance = parseFloat(this.value));"
-              id="inner_distance" 
-              type="range" 
-              min="0.0" 
-              max="100.0" 
-              step=".1">
+          <label class="lbl form-label" for="inner_distance">Inner Distance</label>
+          <output
+            id="inner-distance-output"
+            name="inner_distance"
+            value="fourd.graph.settings.inner_distance"">
+            </output><br>
+          <input 
+            id="inner-distance-input"
+            class="range"><br>
           </form>
         </div>
       </div>
@@ -141,6 +120,36 @@
       <script src="animation.js"></script>
 
       <script>
+var makeCube = async function(fourd, SIZE){
+  var depths = [];
+  for(var k=0; k<SIZE; k++){
+    var rows = [];
+    for(var i=0; i<SIZE; i++){
+      var column = [];
+      for(var j=0; j<SIZE; j++){
+        var some = new Promise((resolve, reject) => {
+          setTimeout(function(){
+            resolve(true)
+          }, 500);
+        })
+        await some;
+        column.push(fourd.graph.add_vertex(options));
+        if(j>0){
+            fourd.graph.add_edge(column[j], column[j-1], false, 1.0);
+        }
+        if(i>0){
+            fourd.graph.add_edge(column[j], rows[i-1][j], false, 1.0);
+        }
+        if(k>0){
+            fourd.graph.add_edge(column[j], depths[k-1][i][j], false, 1.0);
+        }
+      }
+      rows.push(column);
+    }
+    depths.push(rows);
+
+  }
+}
 
 Module.onRuntimeInitialized = _ => {
 
@@ -156,7 +165,45 @@ Module.onRuntimeInitialized = _ => {
     Module.LayoutGraph
   );
 
-  options = {cube: {size: 10, color: 0xffffff}};
+  options = {cube: {size: 0, color: 0x000000}};
+
+  fourd.graph.settings.repulsion = 1e2;
+  fourd.graph.settings.attraction = 1e-3;
+  fourd.graph.settings.epsilon = 0.0001;
+  fourd.graph.settings.inner_distance = 3.6;
+
+  var range = function(min, max, step){
+    var r = [];
+    for(var i=min; i<max; i += step){
+      r.push(i);
+    }
+    return r;
+  }
+
+  var bindIO = function(inputSel, outputSel, variable){
+    console.log(inputSel);
+    new Slider(inputSel, {
+      ticks: range(-5, 4, 1),
+      ticks_labels: range(-5, 4, 1).map(v => `10^${v}`),
+      ticks_snap_bounds: 10,
+      value: variable/10
+    })
+    $(inputSel)[0].value = variable/10;
+    
+    $(inputSel).change(() => {
+      var value = 10^($(inputSel).val());
+      variable = value;
+      $(outputSel)[0].value = variable;
+    });
+
+    $(outputSel)[0].value = variable;
+  };
+
+  bindIO('#repulsion-input', '#repulsion-output', fourd.graph.settings.repulsion);
+  bindIO('#attraction-input', '#attraction-output', fourd.graph.settings.attraction);
+  bindIO('#friction-input', '#friction-output', fourd.graph.settings.friction);
+  bindIO('#epsilon-input', '#epsilon-output', fourd.graph.settings.epsilon);
+  bindIO('#inner-distance-input', '#inner-distance-output', fourd.graph.settings.inner_distance);
 
   console.log(graph.vertex_count);
 };
