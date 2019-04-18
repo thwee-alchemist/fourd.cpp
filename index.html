@@ -4,13 +4,12 @@
       <meta charset="utf-8">
       <title>fourd.wasm</title>
       <meta author="joshua.moore@leudla.net">
-      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-      <link rel="stylesheet" href="/bootstrap-slider.min.css">
+      <link rel="stylesheet" href="bootstrap-4.3.1.min.css">
+      <link rel="stylesheet" href="bootstrap-slider.min.css">
       <link rel="stylesheet" href="fourd.css">
-      <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-      <script src="/bootstrap-slider.min.js"></script>
+      
+      
+      
     </head>
     <body>
       <h2>fourd.wasm</h2>
@@ -56,7 +55,7 @@
         <div class="well col-md-6">
           <form oninput="
             ">
-          <label class="lbl form-label" for="repulsion">Repulsion</label>
+          <label class="lbl form-label" for="repulsion">Repulsion: </label>
           <output 
             id="repulsion-output"
             name="repulsion"
@@ -91,7 +90,7 @@
             step="1">
             <br>
 
-          <label class="lbl form-label" for="friction">Friction</label>
+          <label class="lbl form-label" for="friction">Friction: </label>
           <output
             id="friction-output"
             name="friction">
@@ -101,7 +100,7 @@
             class="range">
             <br>
 
-          <label class="lbl form-label" for="inner_distance">Inner Distance</label>
+          <label class="lbl form-label" for="inner_distance">Inner Distance: </label>
           <output
             id="inner-distance-output"
             name="inner_distance"
@@ -113,12 +112,18 @@
           </form>
         </div>
       </div>
+
+      <script src="jquery-3.4.0.min.js"></script>
+      <script src="popper-1.14.7.min.js"></script>
+      <script src="bootstrap-4.3.1.min.js"></script>
+      <script src="jquery-ui.1.12.1.min.js"></script>
+
       <script src="r103.three.min.js"></script>
       <script src="OrbitControls.js"></script>
       <script src="fourd.js"></script>
-      <script src="jquery-1.11.3.min.js"></script>
       <script src="animation.js"></script>
 
+      <script src="bootstrap-slider.min.js"></script>
       <script>
 var makeCube = async function(fourd, SIZE){
   var depths = [];
@@ -181,21 +186,23 @@ Module.onRuntimeInitialized = _ => {
   }
 
   var bindIO = function(inputSel, outputSel, variable){
-    console.log(inputSel);
-    new Slider(inputSel, {
+    console.log(inputSel, variable);
+
+    var slider = $(inputSel).bootstrapSlider({
       ticks: range(-5, 4, 1),
       ticks_labels: range(-5, 4, 1).map(v => `10^${v}`),
       ticks_snap_bounds: 10,
-      value: variable/10
-    })
-    $(inputSel)[0].value = variable/10;
-    
-    $(inputSel).change(() => {
-      var value = 10^($(inputSel).val());
-      variable = value;
-      $(outputSel)[0].value = variable;
+      value: Math.log10(variable),
     });
 
+    slider.on('change', (e) => {
+      var value = e.value.newValue;
+      variable = parseFloat(`1e${value}`);
+      $(outputSel)[0].value = variable;
+      console.log(variable);
+    });
+
+    $(inputSel)[0].value = Math.log10(variable);
     $(outputSel)[0].value = variable;
   };
 
@@ -204,8 +211,6 @@ Module.onRuntimeInitialized = _ => {
   bindIO('#friction-input', '#friction-output', fourd.graph.settings.friction);
   bindIO('#epsilon-input', '#epsilon-output', fourd.graph.settings.epsilon);
   bindIO('#inner-distance-input', '#inner-distance-output', fourd.graph.settings.inner_distance);
-
-  console.log(graph.vertex_count);
 };
         </script>
     </body>
