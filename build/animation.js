@@ -3,7 +3,7 @@ FourD = function(selector, options, default_settings, LayoutGraph){
   var CONSTANTS = {
     width: 1000,
     attraction: 0.05,
-    far: 1000,
+    far: 100000,
     optimal_distance: 10.0,
     minimum_velocity: 0.001,
     friction: 0.60,
@@ -149,9 +149,9 @@ FourD = function(selector, options, default_settings, LayoutGraph){
   Vertex.prototype.paint = function(scene){
     this.object = new THREE.Group();
     this.object.position.set(
-      Math.random(),
-      Math.random(),
-      Math.random()
+      Math.random()*10,
+      Math.random()*10,
+      Math.random()*10
     );
     
     if(!this.options){
@@ -174,7 +174,7 @@ FourD = function(selector, options, default_settings, LayoutGraph){
       var cube = new Cube(this.options.cube);
 			cube.geometry.computeFaceNormals();
       this.object.add(cube);
-      cube.position.set(Math.random()*10, Math.random()*10, Math.random()*10);
+      cube.position.set(0, 0, 0);
 			cube.vertex = this;
     }
     if(this.options.label && this.options.label.text){
@@ -355,7 +355,9 @@ FourD = function(selector, options, default_settings, LayoutGraph){
 
   // api
   Graph.prototype.remove_vertex = function(vertex){
-    if(vertex.label){
+    console.assert(vertex);
+
+    if(vertex.label !== undefined){
       vertex.label.remove();
     }
 
@@ -422,9 +424,9 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     var cube = new THREE.Mesh( geometry, material );
     var scale = 2;
     cube.position.set(
-      Math.random() * 10, 
-      Math.random() * 10,
-      Math.random() * 10
+      Math.random() * scale, 
+      Math.random() * scale,
+      Math.random() * scale
     );
     cube.matrixAutoUpdate = true;
     
@@ -471,11 +473,11 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     for(var v of this.V.values()){
       v.object.position.x = positions[i].x;
       v.object.position.y = positions[i].y;
-      v.object.position.z = positions[i].z;
-      i++;
+      v.object.position.z = positions[i++].z;
     }
 
-    for(var edge of this.E.values()){
+    for(var e of this.E.values()){
+      var edge = e;
       var source = edge.source.object.position;
       var target = edge.target.object.position;
 
@@ -524,6 +526,11 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     requestAnimationFrame(render);
 
     graph.layout();
+    /*
+    camera.position.x = graph.g.center_x();
+    camera.position.y = graph.g.center_y();
+    camera.position.z = graph.g.center_z() - 500;
+    */
     controls.update(clock.getDelta());
 
     for(var i=0; i<Label.all.length; i++){
@@ -672,7 +679,6 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     this.clear = clear;
     this.variables = CONSTANTS;
 
-
     render();
   };
 
@@ -685,6 +691,12 @@ FourD = function(selector, options, default_settings, LayoutGraph){
   };
 
   this.init(selector, options);
+
+  var v = this.graph.add_vertex({cube: {}});
+  /*
+  this.graph.remove_vertex(v);
+  this.clear();
+  */
   return this;
 };
 
