@@ -150,7 +150,7 @@ var makeCube = async function(fourd, SIZE){
         var some = new Promise((resolve, reject) => {
           setTimeout(function(){
             resolve(true)
-          }, 100);
+          }, 60);
         })
         await some;
         column.push(fourd.graph.add_vertex(options));
@@ -205,12 +205,11 @@ Module.onRuntimeInitialized = _ => {
 
   var bindNumExp = function(numSel, expSel, outputSel, variable_name){
     console.log(numSel, expSel, fourd.graph.settings[variable_name]);
-    var v = fourd.graph.settings[variable_name];
     var number = new Slider(numSel, {
       ticks: range(0, 10, 1),
       ticks_labels: range(0, 10, 1),
       ticks_snap_bounds: 10,
-      value: v.toFixed(1-Math.floor(Math.log(v)/Math.log(10)))
+      value: fourd.graph.settings[variable_name].toFixed(20).match(/[1-9]/)[0]
     });
     var exponent = new Slider(expSel, {
       ticks: range(-5, 7, 1),
@@ -230,7 +229,8 @@ Module.onRuntimeInitialized = _ => {
       $(outputSel)[0].value = fourd.graph.settings[variable_name];
       console.log(fourd.graph.settings[variable_name]);
     });
-    $(numSel)[0].value = v.toFixed(1-Math.floor(Math.log(v)/Math.log(10)));
+
+    $(numSel)[0].value = fourd.graph.settings[variable_name].toFixed(20).match(/[1-9]/)[0];
     $(expSel)[0].value = Math.log10(fourd.graph.settings[variable_name]);
     $(outputSel)[0].value = fourd.graph.settings[variable_name];
   };

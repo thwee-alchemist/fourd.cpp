@@ -355,7 +355,9 @@ FourD = function(selector, options, default_settings, LayoutGraph){
 
   // api
   Graph.prototype.remove_vertex = function(vertex){
-    if(vertex.label){
+    console.assert(vertex);
+
+    if(vertex.label !== undefined){
       vertex.label.remove();
     }
 
@@ -689,6 +691,12 @@ FourD = function(selector, options, default_settings, LayoutGraph){
   };
 
   this.init(selector, options);
+
+  var v = this.graph.add_vertex({cube: {}});
+  /*
+  this.graph.remove_vertex(v);
+  this.clear();
+  */
   return this;
 };
 
