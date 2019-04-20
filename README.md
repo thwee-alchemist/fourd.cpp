@@ -6,7 +6,7 @@ fourd.cpp is a dynamic multilevel graph visualization written in C++, compiled t
 
 To see the graph in action, navigate [here](https://thwee-alchemist.github.io/fourd.cpp).
 
-Click +cube and enter a small number, under ten on an ipad, and watch the graph appear on the screen. You can zoom in and out of he animation, and rotate it. 
+Click +cube and enter a small number, under ten on an ipad, and watch the graph appear on the screen. You can zoom in and out of the animation, and rotate it. 
 
 You can also construct custom graphs by clicking +v, and entering the vertex ids (starting with 1) as input source and target of the edge prompt, when you click +e.
 
