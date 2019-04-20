@@ -677,7 +677,6 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     this.clear = clear;
     this.variables = CONSTANTS;
 
-
     render();
   };
 
