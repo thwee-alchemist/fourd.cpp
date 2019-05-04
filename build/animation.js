@@ -42,8 +42,6 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     this.toString = function(){
       return this.id.toString();
     };
-
-    this.edge_count = 0;
     
     if(!this.options.hasOwnProperty('label')){
       this.options.label = {
@@ -219,9 +217,6 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     this.source = source;
     this.target = target;
 
-    this.source.edge_count += 1;
-    this.target.edge_count += 1;
-
     this.order = Math.random();
   };
 
@@ -238,11 +233,10 @@ FourD = function(selector, options, default_settings, LayoutGraph){
   };
 
   Edge.prototype.destroy = function(scene){
-    CONSTANTS.scene.remove(this.object);
+    console.assert(scene);
+    scene.remove(this.object);
+    this.object.edge = undefined;
     delete this.object;
-    
-    this.source.edge_count--;
-    this.target.edge_count--;
   };
 	
   // Graph
@@ -255,7 +249,7 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     this.edge_id_spawn = 0;
     this.E = new Map();
 
-    this.edge_counts = {};
+    this.E_by_V = new Map();
 
     this.settings = default_settings();
     const graph = new LayoutGraph(this.settings);
@@ -288,6 +282,7 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     
     this.V = new Map();
     this.E = new Map();
+    this.E_by_V = new Map();
     this.edge_counts = {};
     this.edge_id_spawn = 0;
     this.vertex_id_spawn = 0;
@@ -306,7 +301,7 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     this.V.set(v.id, v);
     v.object.vertex = v;
     
-    return v;
+    return v.id;
   };
 
   Graph.prototype.add_camera_vertex = function(camera){
@@ -317,33 +312,61 @@ FourD = function(selector, options, default_settings, LayoutGraph){
   };
 
   // api
-  Graph.prototype.add_edge = function(source, target, options){
-    console.assert(source, "target must not be undefined");
-    console.assert(target, "target must not be undefined");
+  Graph.prototype.add_edge = function(source_id, target_id, options){
+    console.assert(source_id !== undefined, "target must not be undefined");
+    console.assert(target_id !== undefined, "target must not be undefined");
 
     options = Object.assign({
       directed: false,
       strength: 1.0
     }, options);
 
-    var edge = new Edge(this.g.add_edge(source.id, target.id, options.directed, options.strength), source, target, options);
+    var source = this.V.get(source_id);
+    var target = this.V.get(target_id);
+    var edge = new Edge(this.g.add_edge(source_id, target_id, options.directed, options.strength), source, target, options);
     this.E.set(edge.id, edge);
+
+    if(this.E_by_V.has(source_id)){
+      this.E_by_V.get(source_id).push(edge.id);
+    }else{
+      this.E_by_V.set(source_id, [edge.id]);
+    }
+
+    if(this.E_by_V.has(target_id)){
+      this.E_by_V.get(target_id).push(edge.id);
+    }else{
+      this.E_by_V.set(target_id, [edge.id]);
+    }
     
     edge.paint(this.scene);
-    return edge;
+    return edge.id;
   };
 	
 	Graph.prototype.add_invisible_edge = function(source, targe, optionst){
 		return this.add_edge(source, target, Object.assign(options, {opacity: 0.0}));
 	}
 
-  // api
-  Graph.prototype.remove_edge = function(edge){
-    var key = this._make_key(edge.source, edge.target);
-    if(--this.edge_counts[key] === 0){
-      edge.destroy();
-      this.E.delete(edge.id);
+  Graph.prototype.remove_edge = function(edge_id){
+
+    // remove from fourd.cpp
+    this.g.remove_edge(edge_id);
+
+    // lookup edge
+    var edge = this.E.get(edge_id);
+    
+    // remove edge from listings
+    var edges = this.E_by_V.get(edge.source.id);
+    if(edges){
+      this.E_by_V.set(edge.source.id, edges.splice(edges.indexOf(edge.id), 1));
     }
+    edges = this.E_by_V.get(edge.target.id);
+    if(edges){
+      this.E_by_V.set(edge.target.id, edges.splice(edges.indexOf(edge.id), 1));
+    }
+
+    // destroy edge
+    edge.destroy(this.scene);
+    this.E.delete(edge_id);
   };
 
   Graph.prototype.toString = function(){
@@ -353,23 +376,29 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     return '|V|: ' + nodes.toString() + ', |E|: ' + edges.toString();
   };
 
-  // api
-  Graph.prototype.remove_vertex = function(vertex){
-    console.assert(vertex);
+  Graph.prototype.remove_vertex = function(vertex_id){
+    console.assert(vertex_id !== undefined);
 
-    if(vertex.label !== undefined){
-      vertex.label.remove();
-    }
-
-    for(var e of this.E.values()){
-      if(e.source.id == vertex.id || e.target.id == vertex.id){
-        e.destroy(this.scene);
-        this.E.delete(e.id)
+    // lookup vertex
+    if(this.V.has(vertex_id)){
+      var vertex = this.V.get(vertex_id);
+      console.assert(vertex !== undefined);
+      
+      // remove label, if applicable
+      if(vertex.hasOwnProperty('label')){
+        vertex.label.remove();
       }
-    }
 
-    this.scene.remove(vertex.object);
-    this.V.delete(vertex.id);
+      // remove edges
+      var edges = this.E_by_V.get(vertex_id);
+      for(var i=edges.length-1; i>=0; i--){
+        this.remove_edge(edges[i]);
+      }
+
+      // remove
+      this.scene.remove(vertex.object);
+      this.V.delete(vertex.id);
+    }
   };
 
   var is_graph = function(potential){
@@ -464,16 +493,15 @@ FourD = function(selector, options, default_settings, LayoutGraph){
     var pos_str = this.g.layout();
 
     try{
-      positions = JSON.parse(pos_str);
+      positions = new Map(JSON.parse(pos_str));
     }catch(e){
       console.error(pos_str);
     }
 
-    var i=0;
     for(var v of this.V.values()){
-      v.object.position.x = positions[i].x;
-      v.object.position.y = positions[i].y;
-      v.object.position.z = positions[i++].z;
+      v.object.position.x = positions.get(v.id).x;
+      v.object.position.y = positions.get(v.id).y;
+      v.object.position.z = positions.get(v.id).z;
     }
 
     for(var e of this.E.values()){
@@ -498,7 +526,7 @@ FourD = function(selector, options, default_settings, LayoutGraph){
 		if(!vertex) return;
 		
 		if(that.selected){
-			that.graph.remove_edge(that.camera_edge);
+			that.graph.remove_edge(that.camera_edge.id);
 			delete that.camera_edge;
 			that.graph.remove_vertex(that.camera_vertex);
 			delete that.camera_vertex;
@@ -512,7 +540,7 @@ FourD = function(selector, options, default_settings, LayoutGraph){
 	
 	FourD.prototype.deselect = function(){
 		that.selected = null;
-		that.graph.remove_edge(that.camera_edge);
+		that.graph.remove_edge(that.camera_edge.id);
 		delete that.camera_edge;
 		that.graph.remove_vertex(that.camera_vertex);
 		delete that.camera_vertex;
