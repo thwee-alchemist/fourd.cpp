@@ -391,8 +391,10 @@ FourD = function(selector, options, default_settings, LayoutGraph){
 
       // remove edges
       var edges = this.E_by_V.get(vertex_id);
-      for(var i=edges.length-1; i>=0; i--){
-        this.remove_edge(edges[i]);
+      if(edges){
+        for(var i=edges.length-1; i>=0; i--){
+          this.remove_edge(edges[i]);
+        }
       }
 
       // remove

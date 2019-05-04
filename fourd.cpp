@@ -9,6 +9,7 @@
 #include <map>
 #include <sstream>
 #include <ctime>
+#include <queue>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/bind.h>
@@ -17,6 +18,14 @@
 using namespace std;
 using namespace gmtl;
 
+enum FourDType {
+  VertexType,
+  EdgeType,
+  DMVertexType,
+  DMEdgeType,
+  LayoutGraphType,
+  DynamicMatchingType
+};
 
 class Settings{
   public:
@@ -117,13 +126,15 @@ class Vertex {
       position = gmtl::Vec3f(ra.get(), ra.get(), ra.get());
       
       id = vertex_id;
-      string T = "Vertex";
+      FourDType T = VertexType;
       attraction_forces = gmtl::Vec3f(0.0f, 0.0f, 0.0f);
       repulsion_forces = gmtl::Vec3f(0.0f, 0.0f, 0.0f);
       coarser = NULL;
+      edges = new std::set<Edge*>();
     }
 
     int id;
+    static int _id;
     string T;
     gmtl::Vec3f position;
     gmtl::Vec3f velocity;
@@ -133,6 +144,7 @@ class Vertex {
     gmtl::Vec3f repulsion_forces;
   
     Vertex* coarser;
+    std::set<Edge*>* edges;
 
     static gmtl::Vec3f pairwise_repulsion(const gmtl::Vec3f& one, const gmtl::Vec3f& other, Settings* settings){
       gmtl::Vec3f diff = one - other;
@@ -164,7 +176,7 @@ class Vertex {
       return ss.str();
     }
 };
-
+int Vertex::_id = 0;
 
 class Edge {
   public:
@@ -174,14 +186,20 @@ class Edge {
       id = edge_id;
       source = _source;
       target = _target;
+      T = EdgeType;
+
+      order = random();
     };
 
     int id;
+    FourDType T;
     Vertex* source;
     Vertex* target;
     bool directed;
     float strength;
-  
+    Edge* coarser;
+    float order;
+
     string toString(){
       stringstream ss;
       ss << "Edge " << id;
@@ -190,6 +208,11 @@ class Edge {
   
     bool operator==(const Edge& other){
       return id == other.id;
+    }
+
+    ~Edge(){
+      source->edges->erase(this);
+      target->edges->erase(this);
     }
 };
 
@@ -297,6 +320,9 @@ class LayoutGraph {
       vertex_id = -1;
       edge_id = -1;
       settings = _settings;
+      T = LayoutGraphType;
+      coarser = NULL;
+      m = std::map<int, bool>();
     };
   
     int add_vertex(){
@@ -316,8 +342,12 @@ class LayoutGraph {
           tgt = V[i];
         }
       }
+      Edge* edge = new Edge(++edge_id, src, tgt, directed, strength);
+      E.push_back(edge);
 
-      E.push_back(new Edge(++edge_id, src, tgt, directed, strength));
+      src->edges->insert(edge);
+      tgt->edges->insert(edge);
+
       return edge_id;
     }
   
@@ -416,8 +446,24 @@ class LayoutGraph {
       return s.str();
     }
 
-    Vertex get_v(int i) const {
-      return *V[i];
+    Vertex* get_v(int i) const {
+      for(Vertex* v : V){
+        if(v->id == i){
+          return v;
+        }
+      }
+
+      return NULL;
+    }
+
+    Edge* get_e(int i) const {
+      for(Edge* e : E){
+        if(e->id == i){
+          return e;
+        }
+      }
+
+      return NULL;
     }
 
     long vertex_count() const{
@@ -430,6 +476,9 @@ class LayoutGraph {
     vector<Edge*> E;
     Settings* settings;
     gmtl::Vec3f center;
+    FourDType T;
+    LayoutGraph* coarser;
+    std::map<int, bool> m;
 
     float center_x(){
       return center[0];
@@ -447,7 +496,7 @@ class LayoutGraph {
 /*
   A Dynamic Matching Vertex. 
 */
-class DMVertex:Vertex{
+class DMVertex: public Vertex{
   public:
   
   /*
@@ -468,14 +517,20 @@ class DMVertex:Vertex{
   /*
     Type information, either Vertex or DMVertex
   */
-  string T;
+  FourDType T;
 
   /*
-    Constructor
+    Constructors
   */
-  DMVertex(Vertex* slot1, Vertex* slot2):Vertex(id++){
-    T = "DMVertex";
-    id = Vertex::id++;
+  DMVertex(Vertex* _finer) : Vertex(id++){
+    T = DMVertexType;
+    finer = std::set<Vertex*>();
+    finer.insert(_finer);
+    _finer->coarser = this;
+  }
+
+  DMVertex(Vertex* slot1, Vertex* slot2) : Vertex(id++){
+    T = DMVertexType;
 
     if(slot1->T == "DMVertex"){
       position = slot1->position;
@@ -492,6 +547,7 @@ class DMVertex:Vertex{
     }
   }
 
+
   /*
     Returns a new DMVertex, combining its vertices with those of another one. 
   */
@@ -499,6 +555,9 @@ class DMVertex:Vertex{
     return new DMVertex(this, dmvertex);
   }
 
+  /*
+    Returns true, if the vertex is a child of this DMVertex
+  */
   bool has(Vertex* vertex){
     auto search = finer.find(vertex);
     if (search != finer.end()) {
@@ -509,7 +568,296 @@ class DMVertex:Vertex{
   }
 };
 
+class DMEdge : public Edge {
+  public:
 
+  FourDType T;
+  static int _id;
+  Edge* finer;
+  int count;
+  
+  DMEdge(Edge* edge) : Edge(*edge){
+    T = DMEdgeType;
+    edge->coarser = this;
+    finer = edge;
+    count = 0;
+  }
+
+  bool shares_vertex(DMEdge* e2){
+    DMEdge* e1 = this;
+    return e1->source->id == e2->source->id
+      || e1->source->id == e2->target->id
+      || e1->target->id == e2->source->id
+      || e2->target->id == e2->target->id;
+  }
+
+  DMEdge(DMVertex* _source, DMVertex* _target, bool _directed=false, float _strength=1.0) : Edge(DMEdge::_id++, (Vertex*) _source, (Vertex*) _target, _directed, _strength){
+    T = DMEdgeType;
+    count = 0;
+    finer = NULL;
+  }
+
+
+};
+
+class EdgeComparison {
+  bool reverse;
+  public:
+  EdgeComparison(const bool& _reverse=false){
+    reverse = _reverse;
+  }
+
+  bool operator()(const Edge* lhs, const Edge* rhs) const{
+    if(reverse){
+      return lhs->order < rhs->order;
+    }else{
+      return rhs->order < lhs->order;
+    }
+  }
+};
+
+class DynamicMatching : public LayoutGraph {
+  public:
+
+  priority_queue<Edge*, vector<Edge*>, EdgeComparison>* pq;
+  map<int, bool> m;
+
+  DynamicMatching(LayoutGraph* finer, int n) : LayoutGraph(settings){
+    T = DynamicMatchingType;
+    pq = new priority_queue<Edge*, vector<Edge*>, EdgeComparison>;
+
+    if(n > 0){
+      coarser = (LayoutGraph*)new DynamicMatching(finer, --n);
+    }
+  }
+
+  int add_vertex(Vertex* v){
+    V.push_back(v);
+    // no action needed
+    return v->id;
+  };
+
+
+  /*
+    Returns the id of a coarser edge, or creates one.
+  */
+  int get_corresponding_edge(int edge_id){
+    Edge* edge = LayoutGraph::get_e(edge_id);
+    if(edge->coarser != NULL){
+      return ((DMEdge*)edge)->coarser->id;
+    }
+
+    DMEdge* e_prime = new DMEdge((DMVertex*)edge->source, (DMVertex*)edge->target, edge->directed, edge->strength);
+    add_edge(e_prime);
+
+    return e_prime->id;
+  }
+
+  /*
+    Returns the id of a coarser vertex, or creates one.
+  */
+  int get_corresponding_vertex(Vertex* vertex){
+    if(vertex->coarser != NULL){
+      return vertex->coarser->id;
+    }
+
+    DMVertex* v_prime = new DMVertex(vertex);
+    V.push_back((Vertex*)v_prime);
+    return v_prime->id;
+  }
+
+  /*
+
+  */
+  void add_edge(DMEdge* e){
+    DMVertex* v1_prime = (DMVertex*)get_v(get_corresponding_vertex(e->source));
+    DMVertex* v2_prime = (DMVertex*)get_v(get_corresponding_vertex(e->target));
+
+    int e_prime_id = get_corresponding_edge(e->id);
+    DMEdge* e_prime = (DMEdge*)get_e(e_prime_id);
+    if(e_prime){
+      e_prime->count++;
+    }else{
+      e_prime = new DMEdge(v1_prime, v2_prime);
+      add_edge(e_prime);
+
+      pq->push(e_prime);
+      process_queue();
+    }
+  }
+
+  DMVertex* remove_vertex(int vertex_id){
+    for(Edge* e : E){
+      if(e->source->id == vertex_id || e->target->id == vertex_id){
+        remove_edge(get_corresponding_edge(e->id));
+      }
+    }
+    LayoutGraph::remove_vertex(vertex_id);
+
+  }
+
+  DMEdge* remove_edge(int edge_id){
+    DMEdge* e_prime = (DMEdge*)get_e(edge_id);
+    DMVertex* v1_prime = (DMVertex*)e_prime->source;
+    DMVertex* v2_prime = (DMVertex*)e_prime->target;
+    DMEdge* edge = NULL;
+    for(Edge* e : E){
+      if(v1_prime->has(e->source) && v2_prime->has(e->target)){
+        edge = (DMEdge*)e;
+        break;
+      }
+    }
+
+    if(edge != NULL){
+      unmatch(edge);
+
+      edge->count--;
+      if(edge->count == 0){
+        remove_edge(edge->id); // todo, it's ok to pass around references, don't rely on id, as that requires a lookup every time. 
+      }
+      
+      if(edge->source->edges->size() == 0){
+        remove_edge(get_corresponding_edge(edge->source->id));
+      }
+
+      if(edge->target->edges->size() == 0){
+        remove_edge(get_corresponding_edge(edge->target->id));
+      }
+
+      for(Edge* e : E){
+        if(depends(edge, (DMEdge*)e)){
+          pq->push(e);
+        }
+      }
+
+
+    }
+  }
+
+  bool depends(DMEdge* e1, DMEdge* e2){
+    bool priority = e1->order < e2->order;
+    bool share_vertex = e1->shares_vertex(e2);
+
+    return priority && share_vertex;
+  }
+
+  void match(Edge* e){
+    for(Edge* e2 : E){
+      if(depends((DMEdge*)e, (DMEdge*)e2) && get_corresponding_edge(e2->id) != NULL){
+        unmatch((DMEdge*)e2);
+      }
+
+      DMVertex* v1_prime = (DMVertex*)get_corresponding_vertex(e->source);
+      DMVertex* v2_prime = (DMVertex*)get_corresponding_vertex(e->target);
+      remove_vertex(v1_prime->id);
+      remove_vertex(v2_prime->id);
+
+      DMVertex* v1_u_v2 = new DMVertex(e->source, e->target);
+      add_vertex((Vertex*)v1_u_v2);
+
+      for(Edge* edge : E){
+        if(edge->id != e->id){
+          DMVertex* other_vertex = new DMVertex(edge->source);
+          DMEdge* corr_edge = new DMEdge(other_vertex, v1_u_v2);
+          add_vertex(other_vertex);
+          add_edge(corr_edge);
+        }
+      }
+
+      for(Edge* edge : E){
+        if(edge->id != e->id){
+          DMVertex* other_vertex = new DMVertex(edge->target);
+          DMEdge* corr_edge = new DMEdge(v1_u_v2, other_vertex);
+          add_vertex(other_vertex);
+          add_edge(corr_edge);
+        }
+      }
+
+      for(Edge* edge : E){
+        if(depends((DMEdge*)edge, (DMEdge*)e)){
+          pq->push(edge);
+        }
+      }
+    }
+  }
+
+  void unmatch(Edge* e){
+    // "Delete any edges in G' incident on v1_u_v2"
+    int id = get_corresponding_vertex(e->source);
+    DMVertex* v1_u_v2 = (DMVertex*)get_v(id);
+    for(Edge* incident_edge : E){
+      remove_edge(incident_edge->id); // todo: make parameter reference to edge
+    }
+
+    // "Delete the vertex v1_u_v2 from G'"
+    remove_vertex(v1_u_v2->id);
+
+    // "Add new vertices v1_prime and v2_prime to G'"
+    add_vertex(new DMVertex(e->source));
+    add_vertex(new DMVertex(e->target));
+
+    // "For each edge incident on v1 or v2 in G add a corresponding edge to G'"
+    for(Edge* edge : *e->source->edges){
+      add_edge(new DMEdge(
+        (DMVertex*)get_corresponding_vertex(e->source),
+        (DMVertex*)get_corresponding_vertex(edge->source->id == e->source->id ? edge->target : edge->source)
+      ));
+    }
+
+    for(Edge* edge : *e->source->edges){
+      add_edge(new DMEdge(
+        (DMVertex*)get_corresponding_vertex(e->target),
+        (DMVertex*)get_corresponding_vertex(edge->target->id == e->target->id ? edge->source : edge->target)
+      ));
+    }
+
+    for(Edge* edge : E){
+      if(depends((DMEdge*)e, (DMEdge*)edge)){
+        pq->push((DMEdge*)edge);
+      }
+    }
+  }
+
+  bool match_equation(DMEdge* e){
+    if(E.size() == 0){
+      return true;
+    }
+
+    bool _match = true;
+    for(Edge* edge : E){
+      _match = _match && !depends((DMEdge*)edge, e);
+      if(!_match){
+        break;
+      }
+    }
+
+    m.emplace(pair<int, bool>(e->id, _match));
+
+    return _match;
+  }
+
+  void process_queue(){
+    while(!pq->empty()){
+      Edge* e = pq->top();
+      pq->pop();
+      bool _match = match_equation((DMEdge*)e);
+
+      if(_match != match_equation((DMEdge*)e)){
+        match((DMEdge*)e);
+      }else{
+        unmatch((DMEdge*)e);
+      }
+    }
+  }
+
+  pair<int, int> size(){
+    return pair<int, int>(V.size(), E.size());
+  }
+
+  float complexity(){
+    return (float)V.size() / (float)E.size();
+  }
+};
 
 Settings* default_settings(){
   float _repulsion = 1e3;
@@ -554,7 +902,7 @@ EMSCRIPTEN_BINDINGS(fourd){
     .function("remove_edge", &LayoutGraph::remove_edge, allow_raw_pointers())
     .function("layout", &LayoutGraph::layout, allow_raw_pointers())
     .property("vertex_count", &LayoutGraph::vertex_count)
-    .function("get_v", &LayoutGraph::get_v)
+    .function("get_v", &LayoutGraph::get_v, allow_raw_pointers())
     .function("center_x", &LayoutGraph::center_x)
     .function("center_y", &LayoutGraph::center_y)
     .function("center_z", &LayoutGraph::center_z);

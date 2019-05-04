@@ -258,7 +258,7 @@
   (local $2 f32)
   (local $3 f32)
   (local $4 f32)
-  ;;@ fourd.cpp:109:0
+  ;;@ fourd.cpp:115:0
   (local.set $1
    (call $__ZN4gmtl7VecBaseIfLj3ENS_4meta13DefaultVecTagEEixEj
     (local.get $0)
@@ -361,7 +361,7 @@
     (local.get $2)
    )
   )
-  ;;@ fourd.cpp:109:0
+  ;;@ fourd.cpp:115:0
   (local.get $2)
  )
  (func $__ZN4gmtl7VecBaseIfLj3ENS_4meta13DefaultVecTagEEixEj (; 72 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (result i32)
@@ -398,7 +398,7 @@
  )
  (func $__Z16default_settingsv (; 73 ;) (; has Stack IR ;) (result i32)
   (local $0 i32)
-  ;;@ fourd.cpp:522:0
+  ;;@ fourd.cpp:558:0
   (local.set $0
    (call $__Znwm
     (i32.const 24)
@@ -416,32 +416,32 @@
   (local.get $0)
  )
  (func $__ZN8SettingsC2Effffff (; 74 ;) (; has Stack IR ;) (param $0 i32) (param $1 f32) (param $2 f32) (param $3 f32) (param $4 f32) (param $5 f32) (param $6 f32)
-  ;;@ fourd.cpp:31:0
+  ;;@ fourd.cpp:37:0
   (f32.store
    (local.get $0)
    (local.get $1)
   )
-  ;;@ fourd.cpp:32:0
+  ;;@ fourd.cpp:38:0
   (f32.store offset=4
    (local.get $0)
    (local.get $2)
   )
-  ;;@ fourd.cpp:33:0
+  ;;@ fourd.cpp:39:0
   (f32.store offset=8
    (local.get $0)
    (local.get $3)
   )
-  ;;@ fourd.cpp:34:0
+  ;;@ fourd.cpp:40:0
   (f32.store offset=12
    (local.get $0)
    (local.get $4)
   )
-  ;;@ fourd.cpp:35:0
+  ;;@ fourd.cpp:41:0
   (f32.store offset=16
    (local.get $0)
    (local.get $5)
   )
-  ;;@ fourd.cpp:36:0
+  ;;@ fourd.cpp:42:0
   (f32.store offset=20
    (local.get $0)
    (local.get $6)
@@ -1153,7 +1153,7 @@
    )
    (i32.const 0)
   )
-  ;;@ fourd.cpp:561:0
+  ;;@ fourd.cpp:597:0
   (i32.store8
    (local.get $0)
    (i32.load8_s offset=24
@@ -1167,7 +1167,7 @@
  )
  (func $__ZNK8Settings13get_repulsionEv (; 76 ;) (; has Stack IR ;) (param $0 i32) (result f32)
   (local $1 f32)
-  ;;@ fourd.cpp:40:0
+  ;;@ fourd.cpp:46:0
   (local.set $1
    (f32.load
     (local.get $0)
@@ -1176,7 +1176,7 @@
   (local.get $1)
  )
  (func $__ZN8Settings13set_repulsionEf (; 77 ;) (; has Stack IR ;) (param $0 i32) (param $1 f32)
-  ;;@ fourd.cpp:45:0
+  ;;@ fourd.cpp:51:0
   (f32.store
    (local.get $0)
    (local.get $1)
@@ -1184,7 +1184,7 @@
  )
  (func $__ZNK8Settings11get_epsilonEv (; 78 ;) (; has Stack IR ;) (param $0 i32) (result f32)
   (local $1 f32)
-  ;;@ fourd.cpp:48:0
+  ;;@ fourd.cpp:54:0
   (local.set $1
    (f32.load offset=4
     (local.get $0)
@@ -1193,7 +1193,7 @@
   (local.get $1)
  )
  (func $__ZN8Settings11set_epsilonEf (; 79 ;) (; has Stack IR ;) (param $0 i32) (param $1 f32)
-  ;;@ fourd.cpp:53:0
+  ;;@ fourd.cpp:59:0
   (f32.store offset=4
    (local.get $0)
    (local.get $1)
@@ -1201,7 +1201,7 @@
  )
  (func $__ZNK8Settings18get_inner_distanceEv (; 80 ;) (; has Stack IR ;) (param $0 i32) (result f32)
   (local $1 f32)
-  ;;@ fourd.cpp:56:0
+  ;;@ fourd.cpp:62:0
   (local.set $1
    (f32.load offset=8
     (local.get $0)
@@ -1210,7 +1210,7 @@
   (local.get $1)
  )
  (func $__ZN8Settings18set_inner_distanceEf (; 81 ;) (; has Stack IR ;) (param $0 i32) (param $1 f32)
-  ;;@ fourd.cpp:61:0
+  ;;@ fourd.cpp:67:0
   (f32.store offset=8
    (local.get $0)
    (local.get $1)
@@ -1218,7 +1218,7 @@
  )
  (func $__ZNK8Settings14get_attractionEv (; 82 ;) (; has Stack IR ;) (param $0 i32) (result f32)
   (local $1 f32)
-  ;;@ fourd.cpp:64:0
+  ;;@ fourd.cpp:70:0
   (local.set $1
    (f32.load offset=12
     (local.get $0)
@@ -1227,7 +1227,7 @@
   (local.get $1)
  )
  (func $__ZN8Settings14set_attractionEf (; 83 ;) (; has Stack IR ;) (param $0 i32) (param $1 f32)
-  ;;@ fourd.cpp:69:0
+  ;;@ fourd.cpp:75:0
   (f32.store offset=12
    (local.get $0)
    (local.get $1)
@@ -1235,7 +1235,7 @@
  )
  (func $__ZNK8Settings12get_frictionEv (; 84 ;) (; has Stack IR ;) (param $0 i32) (result f32)
   (local $1 f32)
-  ;;@ fourd.cpp:72:0
+  ;;@ fourd.cpp:78:0
   (local.set $1
    (f32.load offset=16
     (local.get $0)
@@ -1244,7 +1244,7 @@
   (local.get $1)
  )
  (func $__ZN8Settings12set_frictionEf (; 85 ;) (; has Stack IR ;) (param $0 i32) (param $1 f32)
-  ;;@ fourd.cpp:77:0
+  ;;@ fourd.cpp:83:0
   (f32.store offset=16
    (local.get $0)
    (local.get $1)
@@ -1252,7 +1252,7 @@
  )
  (func $__ZNK8Settings11get_gravityEv (; 86 ;) (; has Stack IR ;) (param $0 i32) (result f32)
   (local $1 f32)
-  ;;@ fourd.cpp:80:0
+  ;;@ fourd.cpp:86:0
   (local.set $1
    (f32.load offset=20
     (local.get $0)
@@ -1261,7 +1261,7 @@
   (local.get $1)
  )
  (func $__ZN8Settings11set_gravityEf (; 87 ;) (; has Stack IR ;) (param $0 i32) (param $1 f32)
-  ;;@ fourd.cpp:85:0
+  ;;@ fourd.cpp:91:0
   (f32.store offset=20
    (local.get $0)
    (local.get $1)
@@ -1269,7 +1269,7 @@
  )
  (func $__ZNK6Vertex5get_xEv (; 88 ;) (; has Stack IR ;) (param $0 i32) (result f32)
   (local $1 f32)
-  ;;@ fourd.cpp:146:0
+  ;;@ fourd.cpp:153:0
   (local.set $0
    (i32.add
     (local.get $0)
@@ -1291,7 +1291,7 @@
  )
  (func $__ZNK6Vertex5get_yEv (; 89 ;) (; has Stack IR ;) (param $0 i32) (result f32)
   (local $1 f32)
-  ;;@ fourd.cpp:150:0
+  ;;@ fourd.cpp:157:0
   (local.set $0
    (i32.add
     (local.get $0)
@@ -1313,7 +1313,7 @@
  )
  (func $__ZNK6Vertex5get_zEv (; 90 ;) (; has Stack IR ;) (param $0 i32) (result f32)
   (local $1 f32)
-  ;;@ fourd.cpp:154:0
+  ;;@ fourd.cpp:161:0
   (local.set $0
    (i32.add
     (local.get $0)
@@ -1356,7 +1356,7 @@
     (i32.const 16)
    )
   )
-  ;;@ fourd.cpp:303:0
+  ;;@ fourd.cpp:313:0
   (local.set $3
    (call $__Znwm
     (i32.const 80)
@@ -1425,7 +1425,7 @@
     )
    )
    (block
-    ;;@ fourd.cpp:303:0
+    ;;@ fourd.cpp:313:0
     (local.set $1
      (i32.add
       (local.get $0)
@@ -1439,7 +1439,7 @@
     )
    )
   )
-  ;;@ fourd.cpp:304:0
+  ;;@ fourd.cpp:314:0
   (local.set $0
    (i32.load
     (local.get $0)
@@ -1495,7 +1495,7 @@
   )
   (loop $while-in
    (block $while-out
-    ;;@ fourd.cpp:311:0
+    ;;@ fourd.cpp:321:0
     (br_if $while-out
      (i32.eq
       (local.get $7)
@@ -1512,7 +1512,7 @@
       (local.get $5)
      )
     )
-    ;;@ fourd.cpp:312:0
+    ;;@ fourd.cpp:322:0
     (local.set $11
      (i32.load
       (local.get $6)
@@ -1536,7 +1536,7 @@
       (local.get $6)
      )
     )
-    ;;@ fourd.cpp:315:0
+    ;;@ fourd.cpp:325:0
     (local.set $6
      (i32.eq
       (local.get $2)
@@ -1550,7 +1550,7 @@
       (local.get $6)
      )
     )
-    ;;@ fourd.cpp:311:0
+    ;;@ fourd.cpp:321:0
     (local.set $7
      (i32.add
       (local.get $7)
@@ -1560,10 +1560,10 @@
     (br $while-in)
    )
   )
-  ;;@ fourd.cpp:320:0
+  ;;@ fourd.cpp:330:0
   (local.set $5
    (call $__Znwm
-    (i32.const 20)
+    (i32.const 28)
    )
   )
   (local.set $1
@@ -1633,7 +1633,7 @@
     )
    )
    (block
-    ;;@ fourd.cpp:320:0
+    ;;@ fourd.cpp:330:0
     (local.set $1
      (i32.add
       (local.get $0)
@@ -1647,7 +1647,7 @@
     )
    )
   )
-  ;;@ fourd.cpp:321:0
+  ;;@ fourd.cpp:331:0
   (local.set $0
    (i32.load offset=4
     (local.get $0)
@@ -1694,13 +1694,13 @@
        (local.get $6)
       )
      )
-     ;;@ fourd.cpp:327:0
+     ;;@ fourd.cpp:337:0
      (local.set $3
       (i32.load
        (local.get $2)
       )
      )
-     ;;@ fourd.cpp:328:0
+     ;;@ fourd.cpp:338:0
      (local.set $5
       (i32.load
        (local.get $3)
@@ -1805,13 +1805,13 @@
        (local.get $6)
       )
      )
-     ;;@ fourd.cpp:338:0
+     ;;@ fourd.cpp:348:0
      (local.set $3
       (i32.load
        (local.get $2)
       )
      )
-     ;;@ fourd.cpp:339:0
+     ;;@ fourd.cpp:349:0
      (local.set $5
       (i32.load
        (local.get $3)
@@ -1955,7 +1955,7 @@
     (i32.const 192)
    )
   )
-  ;;@ fourd.cpp:350:0
+  ;;@ fourd.cpp:360:0
   (call $__ZN14BarnesHutNode3C2EP8Settings
    (local.tee $12
     (i32.add
@@ -1986,13 +1986,13 @@
      (local.get $13)
     )
     (block
-     ;;@ fourd.cpp:352:0
+     ;;@ fourd.cpp:362:0
      (local.set $10
       (i32.load
        (local.get $3)
       )
      )
-     ;;@ fourd.cpp:353:0
+     ;;@ fourd.cpp:363:0
      (f32.store
       (local.get $2)
       (f32.const 0)
@@ -2023,7 +2023,7 @@
        (local.get $4)
       )
      )
-     ;;@ fourd.cpp:354:0
+     ;;@ fourd.cpp:364:0
      (f32.store
       (local.get $2)
       (f32.const 0)
@@ -2059,7 +2059,7 @@
        (local.get $4)
       )
      )
-     ;;@ fourd.cpp:355:0
+     ;;@ fourd.cpp:365:0
      (f32.store
       (local.get $2)
       (f32.const 0)
@@ -2090,7 +2090,7 @@
        (local.get $4)
       )
      )
-     ;;@ fourd.cpp:356:0
+     ;;@ fourd.cpp:366:0
      (call $__ZN14BarnesHutNode36insertEP6Vertex
       (local.get $12)
       (local.get $10)
@@ -2106,7 +2106,7 @@
     )
    )
   )
-  ;;@ fourd.cpp:359:0
+  ;;@ fourd.cpp:369:0
   (call $__ZN14BarnesHutNode36centerEv
    (local.get $4)
    (local.get $12)
@@ -2123,15 +2123,15 @@
     (local.get $4)
    )
   )
-  ;;@ fourd.cpp:361:0
+  ;;@ fourd.cpp:371:0
   (call $__ZN4gmtl3VecIfLj3EEC2Ev
    (local.get $2)
   )
-  ;;@ fourd.cpp:362:0
+  ;;@ fourd.cpp:372:0
   (call $__ZN4gmtl3VecIfLj3EEC2Ev
    (local.get $6)
   )
-  ;;@ fourd.cpp:364:0
+  ;;@ fourd.cpp:374:0
   (call $__ZN4gmtl3VecIfLj3EEC2Ev
    (local.get $7)
   )
@@ -2154,10 +2154,10 @@
      (local.get $6)
     )
     (block
-     ;;@ fourd.cpp:370:0
+     ;;@ fourd.cpp:380:0
      (local.set $7
       (i32.sub
-       ;;@ fourd.cpp:367:0
+       ;;@ fourd.cpp:377:0
        (local.tee $2
         (i32.load
          (local.get $3)
@@ -2166,7 +2166,7 @@
        (i32.const -64)
       )
      )
-     ;;@ fourd.cpp:368:0
+     ;;@ fourd.cpp:378:0
      (call $__ZN14BarnesHutNode38estimateEP6VertexRN4gmtl3VecIfLj3EEEPFS4_RKS4_S7_P8SettingsES9_
       (local.get $12)
       (local.get $2)
@@ -2206,12 +2206,12 @@
      (local.get $6)
     )
     (block
-     ;;@ fourd.cpp:377:0
+     ;;@ fourd.cpp:387:0
      (call $__ZN4gmtlmiIfLj3ENS_4meta13DefaultVecTagES2_EENS_7VecBaseIT_XT0_ENS1_13VecBinaryExprINS3_IS4_XT0_ET1_EENS3_IS4_XT0_ET2_EENS1_14VecMinusBinaryEEEEERKS7_RKS9_
       (local.get $9)
       (i32.add
-       (i32.load offset=4
-        ;;@ fourd.cpp:376:0
+       (i32.load offset=8
+        ;;@ fourd.cpp:386:0
         (local.tee $2
          (i32.load
           (local.get $3)
@@ -2221,13 +2221,13 @@
        (i32.const 16)
       )
       (i32.add
-       (i32.load offset=8
+       (i32.load offset=12
         (local.get $2)
        )
        (i32.const 16)
       )
      )
-     ;;@ fourd.cpp:377:0
+     ;;@ fourd.cpp:387:0
      (call $__ZN4gmtlmlIfLj3ENS_4meta13VecBinaryExprINS_7VecBaseIfLj3ENS1_13DefaultVecTagEEES5_NS1_14VecMinusBinaryEEEEENS3_IT_XT0_ENS2_INS3_IS8_XT0_ET1_EENS3_IS8_XT0_ENS1_9ScalarArgIS8_EEEENS1_13VecMultBinaryEEEEERKSA_S8_
       (local.get $4)
       (local.get $9)
@@ -2244,21 +2244,21 @@
       (local.get $4)
      )
      (if
-      (i32.load8_s offset=12
+      (i32.load8_s offset=16
        (local.get $2)
       )
       (block
-       ;;@ fourd.cpp:380:0
+       ;;@ fourd.cpp:390:0
        (call $__ZN4gmtlmiIfLj3ENS_4meta13DefaultVecTagES2_EENS_7VecBaseIT_XT0_ENS1_13VecBinaryExprINS3_IS4_XT0_ET1_EENS3_IS4_XT0_ET2_EENS1_14VecMinusBinaryEEEEERKS7_RKS9_
         (local.get $9)
         (i32.add
-         (i32.load offset=4
+         (i32.load offset=8
           (local.get $2)
          )
          (i32.const 16)
         )
         (i32.add
-         (i32.load offset=8
+         (i32.load offset=12
           (local.get $2)
          )
          (i32.const 16)
@@ -2285,7 +2285,7 @@
          (local.get $4)
         )
        )
-       ;;@ fourd.cpp:382:0
+       ;;@ fourd.cpp:392:0
        (f32.store
         (local.get $9)
         (f32.const 0)
@@ -2308,7 +2308,7 @@
         (local.get $7)
         (local.get $8)
        )
-       ;;@ fourd.cpp:383:0
+       ;;@ fourd.cpp:393:0
        (call $__ZN4gmtlmlIfLj3ENS_4meta13DefaultVecTagEEENS_7VecBaseIT_XT0_ENS1_13VecBinaryExprINS3_IS4_XT0_ET1_EENS3_IS4_XT0_ENS1_9ScalarArgIS4_EEEENS1_13VecMultBinaryEEEEERKS7_S4_
         (local.get $9)
         (local.get $4)
@@ -2320,11 +2320,11 @@
        )
       )
      )
-     ;;@ fourd.cpp:386:0
+     ;;@ fourd.cpp:396:0
      (call $__ZN4gmtlmlIfLj3ENS_4meta13DefaultVecTagEEENS_7VecBaseIT_XT0_ENS1_13VecBinaryExprINS3_IS4_XT0_ET1_EENS3_IS4_XT0_ENS1_9ScalarArgIS4_EEEENS1_13VecMultBinaryEEEEERKS7_S4_
       (local.get $4)
       (local.get $5)
-      (f32.load offset=16
+      (f32.load offset=20
        (local.get $2)
       )
      )
@@ -2334,7 +2334,7 @@
      )
      (call $__ZN4gmtlmIIfLj3ENS_4meta13DefaultVecTagEEERNS_7VecBaseIT_XT0_ES2_EES6_RKNS3_IS4_XT0_ET1_EE
       (i32.add
-       (i32.load offset=4
+       (i32.load offset=8
         (local.get $2)
        )
        (i32.const 52)
@@ -2343,7 +2343,7 @@
      )
      (call $__ZN4gmtlpLIfLj3ENS_4meta13DefaultVecTagEEERNS_7VecBaseIT_XT0_ES2_EES6_RKNS3_IS4_XT0_ET1_EE
       (i32.add
-       (i32.load offset=8
+       (i32.load offset=12
         (local.get $2)
        )
        (i32.const 52)
@@ -2489,7 +2489,7 @@
    (local.get $5)
    (i32.const 24)
   )
-  ;;@ fourd.cpp:394:0
+  ;;@ fourd.cpp:404:0
   (call $__ZN4gmtl3VecIfLj3EEC2Ev
    (local.get $9)
   )
@@ -2500,7 +2500,7 @@
     (i32.load
      (i32.add
       (i32.load
-       ;;@ fourd.cpp:396:0
+       ;;@ fourd.cpp:406:0
        (local.tee $3
         (call $__ZNSt3__2lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc
          (local.tee $6
@@ -2577,12 +2577,12 @@
      (local.get $13)
     )
     (block
-     ;;@ fourd.cpp:399:0
+     ;;@ fourd.cpp:409:0
      (call $__ZN4gmtlmlIfLj3ENS_4meta13DefaultVecTagEEENS_7VecBaseIT_XT0_ENS1_13VecBinaryExprINS3_IS4_XT0_ET1_EENS3_IS4_XT0_ENS1_9ScalarArgIS4_EEEENS1_13VecMultBinaryEEEEERKS7_S4_
       (local.get $4)
       (local.tee $10
        (i32.add
-        ;;@ fourd.cpp:397:0
+        ;;@ fourd.cpp:407:0
         (local.tee $2
          (i32.load
           (local.get $3)
@@ -2601,7 +2601,7 @@
       (local.get $9)
       (local.get $4)
      )
-     ;;@ fourd.cpp:404:0
+     ;;@ fourd.cpp:414:0
      (call $__ZN4gmtlmiIfLj3ENS_4meta13DefaultVecTagES2_EENS_7VecBaseIT_XT0_ENS1_13VecBinaryExprINS3_IS4_XT0_ET1_EENS3_IS4_XT0_ET2_EENS1_14VecMinusBinaryEEEEERKS7_RKS9_
       (local.get $8)
       (i32.sub
@@ -2638,7 +2638,7 @@
       )
       (local.get $10)
      )
-     ;;@ fourd.cpp:407:0
+     ;;@ fourd.cpp:417:0
      (drop
       (call $__ZNSt3__2lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc
        (call $__ZNSt3__213basic_ostreamIcNS_11char_traitsIcEEElsEf
@@ -2678,7 +2678,7 @@
       )
      )
      (if
-      ;;@ fourd.cpp:408:0
+      ;;@ fourd.cpp:418:0
       (i32.ne
        (i32.load
         (i32.add
@@ -2690,7 +2690,7 @@
        )
        (local.get $2)
       )
-      ;;@ fourd.cpp:409:0
+      ;;@ fourd.cpp:419:0
       (drop
        (call $__ZNSt3__2lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc
         (local.get $6)
@@ -2768,7 +2768,7 @@
    (i32.load
     (i32.add
      (i32.load
-      ;;@ fourd.cpp:414:0
+      ;;@ fourd.cpp:424:0
       (local.tee $1
        (call $__ZNSt3__2lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc
         (local.get $6)
@@ -2832,7 +2832,7 @@
    (local.get $0)
    (local.get $7)
   )
-  ;;@ fourd.cpp:417:0
+  ;;@ fourd.cpp:427:0
   (call $__ZNSt3__218basic_stringstreamIcNS_11char_traitsIcEENS_9allocatorIcEEED1Ev
    (local.get $5)
   )
@@ -2868,7 +2868,7 @@
     (i32.const 2)
    )
   )
-  ;;@ fourd.cpp:424:0
+  ;;@ fourd.cpp:434:0
   (local.get $0)
  )
  (func $__ZNK11LayoutGraph5get_vEi (; 97 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32)
@@ -2887,7 +2887,7 @@
     (local.get $1)
    )
   )
-  ;;@ fourd.cpp:420:0
+  ;;@ fourd.cpp:430:0
   (local.set $1
    (i32.load
     (local.get $1)
@@ -2900,7 +2900,7 @@
  )
  (func $__ZN11LayoutGraph8center_xEv (; 98 ;) (; has Stack IR ;) (param $0 i32) (result f32)
   (local $1 f32)
-  ;;@ fourd.cpp:435:0
+  ;;@ fourd.cpp:445:0
   (local.set $0
    (i32.add
     (local.get $0)
@@ -2922,7 +2922,7 @@
  )
  (func $__ZN11LayoutGraph8center_yEv (; 99 ;) (; has Stack IR ;) (param $0 i32) (result f32)
   (local $1 f32)
-  ;;@ fourd.cpp:439:0
+  ;;@ fourd.cpp:449:0
   (local.set $0
    (i32.add
     (local.get $0)
@@ -2944,7 +2944,7 @@
  )
  (func $__ZN11LayoutGraph8center_zEv (; 100 ;) (; has Stack IR ;) (param $0 i32) (result f32)
   (local $1 f32)
-  ;;@ fourd.cpp:443:0
+  ;;@ fourd.cpp:453:0
   (local.set $0
    (i32.add
     (local.get $0)
@@ -3036,14 +3036,13 @@
   (local $5 i32)
   (local $6 i32)
   (local $7 i32)
-  (local $8 i32)
   (local.set $2
    (global.get $STACKTOP)
   )
   (global.set $STACKTOP
    (i32.add
     (global.get $STACKTOP)
-    (i32.const 48)
+    (i32.const 32)
    )
   )
   (if
@@ -3052,13 +3051,7 @@
     (global.get $STACK_MAX)
    )
    (call $abortStackOverflow
-    (i32.const 48)
-   )
-  )
-  (local.set $4
-   (i32.add
-    (local.get $2)
-    (i32.const 24)
+    (i32.const 32)
    )
   )
   (local.set $3
@@ -3067,21 +3060,21 @@
     (i32.const 12)
    )
   )
-  (local.set $5
+  (local.set $4
    (i32.add
     (local.get $2)
     (i32.const 8)
    )
   )
-  (local.set $6
+  (local.set $5
    (i32.add
     (local.get $2)
     (i32.const 4)
    )
   )
-  ;;@ fourd.cpp:115:0
+  ;;@ fourd.cpp:121:0
   (i64.store align=4
-   (local.tee $8
+   (local.tee $7
     (i32.add
      (local.get $0)
      (i32.const 4)
@@ -3091,13 +3084,13 @@
   )
   ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/memory:2089:0
   (i32.store offset=8
-   (local.get $8)
+   (local.get $7)
    (i32.const 0)
   )
   (loop $while-in
    (if
     (i32.ne
-     (local.get $7)
+     (local.get $6)
      (i32.const 3)
     )
     (block
@@ -3105,17 +3098,17 @@
      (i32.store
       (i32.add
        (i32.shl
-        (local.get $7)
+        (local.get $6)
         (i32.const 2)
        )
-       (local.get $8)
+       (local.get $7)
       )
       (i32.const 0)
      )
      ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/string:1355:0
-     (local.set $7
+     (local.set $6
       (i32.add
-       (local.get $7)
+       (local.get $6)
        (i32.const 1)
       )
      )
@@ -3123,7 +3116,7 @@
     )
    )
   )
-  ;;@ fourd.cpp:115:0
+  ;;@ fourd.cpp:121:0
   (call $__ZN4gmtl3VecIfLj3EEC2Ev
    (i32.add
     (local.get $0)
@@ -3149,14 +3142,14 @@
    )
   )
   (call $__ZN4gmtl3VecIfLj3EEC2Ev
-   (local.tee $7
+   (local.tee $6
     (i32.sub
      (local.get $0)
      (i32.const -64)
     )
    )
   )
-  ;;@ fourd.cpp:116:0
+  ;;@ fourd.cpp:122:0
   (i64.store
    (i32.const 20256)
    (i64.extend_i32_u
@@ -3168,9 +3161,9 @@
     )
    )
   )
-  ;;@ fourd.cpp:117:0
+  ;;@ fourd.cpp:123:0
   (f32.store
-   (local.get $3)
+   (local.get $4)
    (call $__ZN10Randomator3getEv)
   )
   (f32.store
@@ -3178,56 +3171,39 @@
    (call $__ZN10Randomator3getEv)
   )
   (f32.store
-   (local.get $6)
+   (local.get $2)
    (call $__ZN10Randomator3getEv)
   )
   (call $__ZN4gmtl3VecIfLj3EEC2ERKfS3_S3_
-   (local.get $4)
    (local.get $3)
+   (local.get $4)
    (local.get $5)
-   (local.get $6)
+   (local.get $2)
   )
   (i64.store offset=16 align=4
    (local.get $0)
    (i64.load align=4
-    (local.get $4)
+    (local.get $3)
    )
   )
   (i32.store offset=24
    (local.get $0)
    (i32.load offset=8
-    (local.get $4)
+    (local.get $3)
    )
   )
-  ;;@ fourd.cpp:119:0
+  ;;@ fourd.cpp:125:0
   (i32.store
    (local.get $0)
    (local.get $1)
   )
-  (i64.store align=4
-   (local.get $4)
-   (i64.const 0)
-  )
-  ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/memory:2089:0
-  (i32.store offset=8
-   (local.get $4)
-   (i32.const 0)
-  )
-  ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/string:1605:0
-  (call $__ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE6__initEPKcm
-   (local.get $4)
-   (i32.const 12458)
-   (call $__ZNSt3__211char_traitsIcE6lengthEPKc
-    (i32.const 12458)
-   )
-  )
-  ;;@ fourd.cpp:121:0
+  ;;@ fourd.cpp:127:0
   (f32.store
-   (local.get $5)
+   (local.get $4)
    (f32.const 0)
   )
   (f32.store
-   (local.get $6)
+   (local.get $5)
    (f32.const 0)
   )
   (f32.store
@@ -3236,8 +3212,8 @@
   )
   (call $__ZN4gmtl3VecIfLj3EEC2ERKfS3_S3_
    (local.get $3)
+   (local.get $4)
    (local.get $5)
-   (local.get $6)
    (local.get $2)
   )
   (i64.store offset=52 align=4
@@ -3252,13 +3228,13 @@
     (local.get $3)
    )
   )
-  ;;@ fourd.cpp:122:0
+  ;;@ fourd.cpp:128:0
   (f32.store
-   (local.get $5)
+   (local.get $4)
    (f32.const 0)
   )
   (f32.store
-   (local.get $6)
+   (local.get $5)
    (f32.const 0)
   )
   (f32.store
@@ -3267,30 +3243,26 @@
   )
   (call $__ZN4gmtl3VecIfLj3EEC2ERKfS3_S3_
    (local.get $3)
+   (local.get $4)
    (local.get $5)
-   (local.get $6)
    (local.get $2)
   )
   (i64.store align=4
-   (local.get $7)
+   (local.get $6)
    (i64.load align=4
     (local.get $3)
    )
   )
   (i32.store offset=8
-   (local.get $7)
+   (local.get $6)
    (i32.load offset=8
     (local.get $3)
    )
   )
-  ;;@ fourd.cpp:123:0
+  ;;@ fourd.cpp:129:0
   (i32.store offset=76
    (local.get $0)
    (i32.const 0)
-  )
-  ;;@ fourd.cpp:124:0
-  (call $__ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEED2Ev
-   (local.get $4)
   )
   (global.set $STACKTOP
    (local.get $2)
@@ -3845,61 +3817,45 @@
    (local.get $1)
   )
  )
- (func $__ZNSt3__211char_traitsIcE6lengthEPKc (; 112 ;) (; has Stack IR ;) (param $0 i32) (result i32)
-  ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/__string:217:0
-  (local.set $0
-   (call $_strlen
-    (local.get $0)
-   )
-  )
-  (local.get $0)
- )
- (func $__ZNSt3__211char_traitsIcE6assignERcRKc (; 113 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
-  ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/__string:208:0
-  (local.set $1
-   (i32.load8_s
-    (local.get $1)
-   )
-  )
-  (i32.store8
-   (local.get $0)
-   (local.get $1)
-  )
- )
- (func $__ZN4EdgeC2EiP6VertexS1_bf (; 114 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32) (param $4 i32) (param $5 f32)
+ (func $__ZN4EdgeC2EiP6VertexS1_bf (; 112 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32) (param $4 i32) (param $5 f32)
   (local.set $4
    (i32.and
     (local.get $4)
     (i32.const 1)
    )
   )
-  ;;@ fourd.cpp:172:0
-  (i32.store8 offset=12
+  ;;@ fourd.cpp:179:0
+  (i32.store8 offset=16
    (local.get $0)
    (local.get $4)
   )
-  ;;@ fourd.cpp:173:0
-  (f32.store offset=16
+  ;;@ fourd.cpp:180:0
+  (f32.store offset=20
    (local.get $0)
    (local.get $5)
   )
-  ;;@ fourd.cpp:174:0
+  ;;@ fourd.cpp:181:0
   (i32.store
    (local.get $0)
    (local.get $1)
   )
-  ;;@ fourd.cpp:175:0
-  (i32.store offset=4
+  ;;@ fourd.cpp:182:0
+  (i32.store offset=8
    (local.get $0)
    (local.get $2)
   )
-  ;;@ fourd.cpp:176:0
-  (i32.store offset=8
+  ;;@ fourd.cpp:183:0
+  (i32.store offset=12
    (local.get $0)
    (local.get $3)
   )
+  ;;@ fourd.cpp:184:0
+  (i32.store offset=4
+   (local.get $0)
+   (i32.const 1)
+  )
  )
- (func $__ZN14BarnesHutNode3C2EP8Settings (; 115 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
+ (func $__ZN14BarnesHutNode3C2EP8Settings (; 113 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
   (local $2 i32)
   (local $3 i32)
   (local.set $3
@@ -3955,19 +3911,19 @@
     (i32.const 4)
    )
   )
-  ;;@ fourd.cpp:213:0
+  ;;@ fourd.cpp:223:0
   (call $__ZN4gmtl3VecIfLj3EEC2Ev
    (i32.add
     (local.get $0)
     (i32.const 24)
    )
   )
-  ;;@ fourd.cpp:214:0
+  ;;@ fourd.cpp:224:0
   (i32.store offset=36
    (local.get $0)
    (i32.const 0)
   )
-  ;;@ fourd.cpp:215:0
+  ;;@ fourd.cpp:225:0
   (i32.store offset=40
    (local.get $0)
    (local.get $1)
@@ -3976,7 +3932,7 @@
    (local.get $3)
   )
  )
- (func $__ZN14BarnesHutNode36insertEP6Vertex (; 116 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
+ (func $__ZN14BarnesHutNode36insertEP6Vertex (; 114 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
   (local $2 i32)
   (local $3 f32)
   (local $4 f32)
@@ -4021,23 +3977,23 @@
    )
   )
   (if
-   ;;@ fourd.cpp:240:0
+   ;;@ fourd.cpp:250:0
    (i32.eq
     (local.get $2)
     (local.get $9)
    )
-   ;;@ fourd.cpp:241:0
+   ;;@ fourd.cpp:251:0
    (call $__ZN14BarnesHutNode311place_innerEP6Vertex
     (local.get $0)
     (local.get $1)
    )
    (block
-    ;;@ fourd.cpp:243:0
+    ;;@ fourd.cpp:253:0
     (call $__ZN14BarnesHutNode36centerEv
      (local.get $6)
      (local.get $0)
     )
-    ;;@ fourd.cpp:244:0
+    ;;@ fourd.cpp:254:0
     (i64.store align=4
      (local.get $5)
      (i64.load offset=16 align=4
@@ -4050,7 +4006,7 @@
       (local.get $1)
      )
     )
-    ;;@ fourd.cpp:245:0
+    ;;@ fourd.cpp:255:0
     (local.set $2
      (call $__ZN4gmtl7VecBaseIfLj3ENS_4meta13DefaultVecTagEEixEj
       (local.get $6)
@@ -4113,7 +4069,7 @@
       (local.get $3)
      )
     )
-    ;;@ fourd.cpp:246:0
+    ;;@ fourd.cpp:256:0
     (local.set $2
      (call $__ZN4gmtl7VecBaseIfLj3ENS_4meta13DefaultVecTagEEixEj
       (local.get $6)
@@ -4176,14 +4132,14 @@
       (local.get $3)
      )
     )
-    ;;@ fourd.cpp:245:0
+    ;;@ fourd.cpp:255:0
     (local.set $8
      (f32.add
       (local.get $8)
       (local.get $3)
      )
     )
-    ;;@ fourd.cpp:247:0
+    ;;@ fourd.cpp:257:0
     (local.set $2
      (call $__ZN4gmtl7VecBaseIfLj3ENS_4meta13DefaultVecTagEEixEj
       (local.get $6)
@@ -4246,7 +4202,7 @@
       (local.get $3)
      )
     )
-    ;;@ fourd.cpp:246:0
+    ;;@ fourd.cpp:256:0
     (local.set $3
      (f32.add
       (local.get $8)
@@ -4259,7 +4215,7 @@
       (local.get $3)
      )
     )
-    ;;@ fourd.cpp:249:0
+    ;;@ fourd.cpp:259:0
     (local.set $2
      (i32.load offset=40
       (local.get $0)
@@ -4275,12 +4231,12 @@
       (local.get $4)
       (local.get $3)
      )
-     ;;@ fourd.cpp:250:0
+     ;;@ fourd.cpp:260:0
      (call $__ZN14BarnesHutNode311place_innerEP6Vertex
       (local.get $0)
       (local.get $1)
      )
-     ;;@ fourd.cpp:252:0
+     ;;@ fourd.cpp:262:0
      (call $__ZN14BarnesHutNode311place_outerEP6Vertex
       (local.get $0)
       (local.get $1)
@@ -4288,7 +4244,7 @@
     )
    )
   )
-  ;;@ fourd.cpp:256:0
+  ;;@ fourd.cpp:266:0
   (local.set $1
    (i32.load offset=36
     (local.get $0)
@@ -4308,7 +4264,7 @@
    (local.get $5)
   )
  )
- (func $__ZN14BarnesHutNode36centerEv (; 117 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
+ (func $__ZN14BarnesHutNode36centerEv (; 115 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
   (local $2 i32)
   (local.set $2
    (global.get $STACKTOP)
@@ -4328,7 +4284,7 @@
     (i32.const 16)
    )
   )
-  ;;@ fourd.cpp:225:0
+  ;;@ fourd.cpp:235:0
   (call $__ZN4gmtlmlIfLj3ENS_4meta13DefaultVecTagEEENS_7VecBaseIT_XT0_ENS1_13VecBinaryExprINS3_IS4_XT0_ET1_EENS3_IS4_XT0_ENS1_9ScalarArgIS4_EEEENS1_13VecMultBinaryEEEEERKS7_S4_
    (local.get $2)
    (i32.add
@@ -4349,7 +4305,7 @@
    (local.get $2)
   )
  )
- (func $__ZN14BarnesHutNode38estimateEP6VertexRN4gmtl3VecIfLj3EEEPFS4_RKS4_S7_P8SettingsES9_ (; 118 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32) (param $4 i32)
+ (func $__ZN14BarnesHutNode38estimateEP6VertexRN4gmtl3VecIfLj3EEEPFS4_RKS4_S7_P8SettingsES9_ (; 116 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32) (param $4 i32)
   (local $5 i32)
   (local $6 i32)
   (local $7 i32)
@@ -4400,7 +4356,7 @@
   (local.set $13
    (local.get $5)
   )
-  ;;@ fourd.cpp:268:0
+  ;;@ fourd.cpp:278:0
   (call $__ZN4gmtl3VecIfLj3EEC2Ev
    (local.get $12)
   )
@@ -4483,7 +4439,7 @@
        (i32.const 2)
       )
      )
-     ;;@ fourd.cpp:270:0
+     ;;@ fourd.cpp:280:0
      (br_if $label$break$L4
       (i32.ge_u
        (local.get $9)
@@ -4500,7 +4456,7 @@
        (local.get $7)
       )
      )
-     ;;@ fourd.cpp:271:0
+     ;;@ fourd.cpp:281:0
      (local.set $7
       (i32.load
        (local.get $7)
@@ -4522,7 +4478,7 @@
        (local.get $14)
       )
       (block
-       ;;@ fourd.cpp:272:0
+       ;;@ fourd.cpp:282:0
        (local.set $5
         (i32.add
          (local.get $7)
@@ -4571,7 +4527,7 @@
        )
       )
      )
-     ;;@ fourd.cpp:270:0
+     ;;@ fourd.cpp:280:0
      (local.set $9
       (i32.add
        (local.get $9)
@@ -4584,7 +4540,7 @@
      (br $while-in1)
     )
    )
-   ;;@ fourd.cpp:277:0
+   ;;@ fourd.cpp:287:0
    (local.set $5
     (i32.add
      (local.get $1)
@@ -4631,7 +4587,7 @@
      (i32.const 2)
     )
    )
-   ;;@ fourd.cpp:277:0
+   ;;@ fourd.cpp:287:0
    (local.set $15
     (f32.convert_i32_u
      (local.get $5)
@@ -4672,7 +4628,7 @@
       (local.get $6)
      )
     )
-    ;;@ fourd.cpp:281:0
+    ;;@ fourd.cpp:291:0
     (local.set $5
      (i32.load offset=28
       (local.get $0)
@@ -4751,7 +4707,7 @@
    (local.get $13)
   )
  )
- (func $__ZN6Vertex18pairwise_repulsionERKN4gmtl3VecIfLj3EEES4_P8Settings (; 119 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32)
+ (func $__ZN6Vertex18pairwise_repulsionERKN4gmtl3VecIfLj3EEES4_P8Settings (; 117 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32)
   (local $4 i32)
   (local $5 i32)
   (local $6 i32)
@@ -4781,7 +4737,7 @@
     (i32.const 8)
    )
   )
-  ;;@ fourd.cpp:138:0
+  ;;@ fourd.cpp:145:0
   (call $__ZN4gmtlmiIfLj3ENS_4meta13DefaultVecTagES2_EENS_7VecBaseIT_XT0_ENS1_13VecBinaryExprINS3_IS4_XT0_ET1_EENS3_IS4_XT0_ET2_EENS1_14VecMinusBinaryEEEEERKS7_RKS9_
    (local.tee $4
     (i32.add
@@ -4802,7 +4758,7 @@
     (local.get $6)
    )
   )
-  ;;@ fourd.cpp:139:0
+  ;;@ fourd.cpp:146:0
   (i32.store offset=8
    (local.get $4)
    (i32.load offset=8
@@ -4814,14 +4770,14 @@
     (local.get $4)
    )
   )
-  ;;@ fourd.cpp:140:0
+  ;;@ fourd.cpp:147:0
   (local.set $7
    (f32.div
     (f32.load
      (local.get $3)
     )
     (f32.mul
-     ;;@ fourd.cpp:141:0
+     ;;@ fourd.cpp:148:0
      (local.tee $7
       (f32.add
        (local.get $8)
@@ -4834,19 +4790,19 @@
     )
    )
   )
-  ;;@ fourd.cpp:142:0
+  ;;@ fourd.cpp:149:0
   (call $__ZN4gmtlmlIfLj3ENS_4meta13DefaultVecTagEEENS_7VecBaseIT_XT0_ENS1_13VecBinaryExprINS3_IS4_XT0_ET1_EENS3_IS4_XT0_ENS1_9ScalarArgIS4_EEEENS1_13VecMultBinaryEEEEERKS7_S4_
    (local.get $5)
    (local.get $6)
    (local.get $8)
   )
-  ;;@ fourd.cpp:141:0
+  ;;@ fourd.cpp:148:0
   (call $__ZN4gmtlmlIfLj3ENS_4meta13VecBinaryExprINS_7VecBaseIfLj3ENS1_13DefaultVecTagEEENS3_IfLj3ENS1_9ScalarArgIfEEEENS1_12VecDivBinaryEEEEENS3_IT_XT0_ENS2_INS3_ISB_XT0_ENS6_ISB_EEEENS3_ISB_XT0_ET1_EENS1_13VecMultBinaryEEEEESB_RKSF_
    (local.get $4)
    (local.get $7)
    (local.get $5)
   )
-  ;;@ fourd.cpp:140:0
+  ;;@ fourd.cpp:147:0
   (call $__ZN4gmtl7VecBaseIfLj3ENS_4meta13DefaultVecTagEEC2INS1_13VecBinaryExprINS0_IfLj3ENS1_9ScalarArgIfEEEENS0_IfLj3ENS5_IS3_S8_NS1_12VecDivBinaryEEEEENS1_13VecMultBinaryEEEEERKNS0_IfLj3ET_EE
    (local.get $0)
    (local.get $4)
@@ -4855,7 +4811,7 @@
    (local.get $5)
   )
  )
- (func $__ZN4gmtlmlIfLj3ENS_4meta13VecBinaryExprINS_7VecBaseIfLj3ENS1_13DefaultVecTagEEES5_NS1_14VecMinusBinaryEEEEENS3_IT_XT0_ENS2_INS3_IS8_XT0_ET1_EENS3_IS8_XT0_ENS1_9ScalarArgIS8_EEEENS1_13VecMultBinaryEEEEERKSA_S8_ (; 120 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 f32)
+ (func $__ZN4gmtlmlIfLj3ENS_4meta13VecBinaryExprINS_7VecBaseIfLj3ENS1_13DefaultVecTagEEES5_NS1_14VecMinusBinaryEEEEENS3_IT_XT0_ENS2_INS3_IS8_XT0_ET1_EENS3_IS8_XT0_ENS1_9ScalarArgIS8_EEEENS1_13VecMultBinaryEEEEERKSA_S8_ (; 118 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 f32)
   (local $3 i32)
   (local $4 i32)
   (local $5 i32)
@@ -4926,7 +4882,7 @@
    (local.get $3)
   )
  )
- (func $__ZN4gmtlmiIfLj3ENS_4meta13DefaultVecTagES2_EENS_7VecBaseIT_XT0_ENS1_13VecBinaryExprINS3_IS4_XT0_ET1_EENS3_IS4_XT0_ET2_EENS1_14VecMinusBinaryEEEEERKS7_RKS9_ (; 121 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32)
+ (func $__ZN4gmtlmiIfLj3ENS_4meta13DefaultVecTagES2_EENS_7VecBaseIT_XT0_ENS1_13VecBinaryExprINS3_IS4_XT0_ET1_EENS3_IS4_XT0_ET2_EENS1_14VecMinusBinaryEEEEERKS7_RKS9_ (; 119 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32)
   (local $3 i32)
   (local.set $3
    (global.get $STACKTOP)
@@ -4965,14 +4921,14 @@
    (local.get $3)
   )
  )
- (func $__ZN4gmtl3VecIfLj3EEC2INS_4meta13VecBinaryExprINS_7VecBaseIfLj3ENS3_13DefaultVecTagEEES7_NS3_14VecMinusBinaryEEEEERKNS5_IfLj3ET_EE (; 122 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
+ (func $__ZN4gmtl3VecIfLj3EEC2INS_4meta13VecBinaryExprINS_7VecBaseIfLj3ENS3_13DefaultVecTagEEES7_NS3_14VecMinusBinaryEEEEERKNS5_IfLj3ET_EE (; 120 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
   ;;@ /home/thwee/Code/fourd.cpp/gmtl/gmtl/Vec.h:88:0
   (call $__ZN4gmtl7VecBaseIfLj3ENS_4meta13DefaultVecTagEEC2INS1_13VecBinaryExprIS3_S3_NS1_14VecMinusBinaryEEEEERKNS0_IfLj3ET_EE
    (local.get $0)
    (local.get $1)
   )
  )
- (func $__ZN4gmtlpLIfLj3ENS_4meta13VecBinaryExprINS_7VecBaseIfLj3ENS1_13DefaultVecTagEEENS3_IfLj3ENS1_9ScalarArgIfEEEENS1_13VecMultBinaryEEEEERNS3_IT_XT0_ES4_EESD_RKNS3_ISB_XT0_ET1_EE (; 123 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
+ (func $__ZN4gmtlpLIfLj3ENS_4meta13VecBinaryExprINS_7VecBaseIfLj3ENS1_13DefaultVecTagEEENS3_IfLj3ENS1_9ScalarArgIfEEEENS1_13VecMultBinaryEEEEERNS3_IT_XT0_ES4_EESD_RKNS3_ISB_XT0_ET1_EE (; 121 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
   (local $2 i32)
   (local $3 i32)
   (local $4 f32)
@@ -5016,7 +4972,7 @@
    )
   )
  )
- (func $__ZN4gmtlmlIfLj3ENS_4meta13DefaultVecTagEEENS_7VecBaseIT_XT0_ENS1_13VecBinaryExprINS3_IS4_XT0_ET1_EENS3_IS4_XT0_ENS1_9ScalarArgIS4_EEEENS1_13VecMultBinaryEEEEERKS7_S4_ (; 124 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 f32)
+ (func $__ZN4gmtlmlIfLj3ENS_4meta13DefaultVecTagEEENS_7VecBaseIT_XT0_ENS1_13VecBinaryExprINS3_IS4_XT0_ET1_EENS3_IS4_XT0_ENS1_9ScalarArgIS4_EEEENS1_13VecMultBinaryEEEEERKS7_S4_ (; 122 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 f32)
   (local $3 i32)
   (local $4 i32)
   (local $5 i32)
@@ -5080,13 +5036,13 @@
    (local.get $3)
   )
  )
- (func $__ZN4gmtl3VecIfLj3EEaSINS_4meta13VecBinaryExprINS_7VecBaseIfLj3ENS3_13DefaultVecTagEEENS5_IfLj3ENS3_9ScalarArgIfEEEENS3_13VecMultBinaryEEEEERS1_RKNS5_IfLj3ET_EE (; 125 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
+ (func $__ZN4gmtl3VecIfLj3EEaSINS_4meta13VecBinaryExprINS_7VecBaseIfLj3ENS3_13DefaultVecTagEEENS5_IfLj3ENS3_9ScalarArgIfEEEENS3_13VecMultBinaryEEEEERS1_RKNS5_IfLj3ET_EE (; 123 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
   (call $__ZN4gmtl7VecBaseIfLj3ENS_4meta13DefaultVecTagEEaSINS1_13VecBinaryExprIS3_NS0_IfLj3ENS1_9ScalarArgIfEEEENS1_13VecMultBinaryEEEEERS3_RKNS0_IfLj3ET_EE
    (local.get $0)
    (local.get $1)
   )
  )
- (func $__ZN4gmtlmIIfLj3ENS_4meta13DefaultVecTagEEERNS_7VecBaseIT_XT0_ES2_EES6_RKNS3_IS4_XT0_ET1_EE (; 126 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
+ (func $__ZN4gmtlmIIfLj3ENS_4meta13DefaultVecTagEEERNS_7VecBaseIT_XT0_ES2_EES6_RKNS3_IS4_XT0_ET1_EE (; 124 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
   (local $2 i32)
   (local $3 f32)
   (local $4 i32)
@@ -5135,7 +5091,7 @@
    )
   )
  )
- (func $__ZN4gmtlpLIfLj3ENS_4meta13DefaultVecTagEEERNS_7VecBaseIT_XT0_ES2_EES6_RKNS3_IS4_XT0_ET1_EE (; 127 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
+ (func $__ZN4gmtlpLIfLj3ENS_4meta13DefaultVecTagEEERNS_7VecBaseIT_XT0_ES2_EES6_RKNS3_IS4_XT0_ET1_EE (; 125 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
   (local $2 i32)
   (local $3 i32)
   (local $4 f32)
@@ -5181,7 +5137,7 @@
    )
   )
  )
- (func $__ZNSt3__2lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc (; 128 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (result i32)
+ (func $__ZNSt3__2lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc (; 126 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (result i32)
   (local $2 i32)
   ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/ostream:864:0
   (local.set $2
@@ -5198,7 +5154,7 @@
   )
   (local.get $0)
  )
- (func $__ZN4gmtlmiIfLj3ENS_4meta13VecBinaryExprINS_7VecBaseIfLj3ENS1_13DefaultVecTagEEES5_NS1_14VecMinusBinaryEEES4_EENS3_IT_XT0_ENS2_INS3_IS8_XT0_ET1_EENS3_IS8_XT0_ET2_EES6_EEEERKSA_RKSC_ (; 129 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32)
+ (func $__ZN4gmtlmiIfLj3ENS_4meta13VecBinaryExprINS_7VecBaseIfLj3ENS1_13DefaultVecTagEEES5_NS1_14VecMinusBinaryEEES4_EENS3_IT_XT0_ENS2_INS3_IS8_XT0_ET1_EENS3_IS8_XT0_ET2_EES6_EEEERKSA_RKSC_ (; 127 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32)
   (local $3 i32)
   (local.set $3
    (global.get $STACKTOP)
@@ -5244,7 +5200,7 @@
    (local.get $3)
   )
  )
- (func $__ZNSt3__218basic_stringstreamIcNS_11char_traitsIcEENS_9allocatorIcEEED1Ev (; 130 ;) (; has Stack IR ;) (param $0 i32)
+ (func $__ZNSt3__218basic_stringstreamIcNS_11char_traitsIcEENS_9allocatorIcEEED1Ev (; 128 ;) (; has Stack IR ;) (param $0 i32)
   ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/iosfwd:126:0
   (call $__ZNSt3__218basic_stringstreamIcNS_11char_traitsIcEENS_9allocatorIcEEED2Ev
    (local.get $0)
@@ -5256,7 +5212,7 @@
    )
   )
  )
- (func $__ZN14BarnesHutNode3D2Ev (; 131 ;) (; has Stack IR ;) (param $0 i32)
+ (func $__ZN14BarnesHutNode3D2Ev (; 129 ;) (; has Stack IR ;) (param $0 i32)
   (local $1 i32)
   (local $2 i32)
   (local $3 i32)
@@ -5286,7 +5242,7 @@
   ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/__tree:1126:0
   (local.set $1
    (i32.load
-    ;;@ fourd.cpp:219:0
+    ;;@ fourd.cpp:229:0
     (local.tee $4
      (i32.add
       (local.get $0)
@@ -5323,7 +5279,7 @@
       )
      )
      (if
-      ;;@ fourd.cpp:220:0
+      ;;@ fourd.cpp:230:0
       (local.tee $2
        (i32.load offset=12
         (local.get $3)
@@ -5338,7 +5294,7 @@
        )
       )
      )
-     ;;@ fourd.cpp:221:0
+     ;;@ fourd.cpp:231:0
      (call $__ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEED2Ev
       (local.get $3)
      )
@@ -5401,7 +5357,7 @@
     )
    )
   )
-  ;;@ fourd.cpp:222:0
+  ;;@ fourd.cpp:232:0
   (call $__ZNSt3__26__treeINS_12__value_typeINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEEP14BarnesHutNode3EENS_19__map_value_compareIS7_SA_NS_4lessIS7_EELb1EEENS5_ISA_EEE7destroyEPNS_11__tree_nodeISA_PvEE
    (local.get $4)
    (i32.load offset=4
@@ -5415,7 +5371,7 @@
    (local.get $3)
   )
  )
- (func $__ZNSt3__213__vector_baseIP6VertexNS_9allocatorIS2_EEED2Ev (; 132 ;) (; has Stack IR ;) (param $0 i32)
+ (func $__ZNSt3__213__vector_baseIP6VertexNS_9allocatorIS2_EEED2Ev (; 130 ;) (; has Stack IR ;) (param $0 i32)
   (local $1 i32)
   ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/vector:444:0
   (if
@@ -5438,7 +5394,7 @@
    )
   )
  )
- (func $__ZNSt3__26__treeINS_12__value_typeINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEEP14BarnesHutNode3EENS_19__map_value_compareIS7_SA_NS_4lessIS7_EELb1EEENS5_ISA_EEE7destroyEPNS_11__tree_nodeISA_PvEE (; 133 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
+ (func $__ZNSt3__26__treeINS_12__value_typeINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEEP14BarnesHutNode3EENS_19__map_value_compareIS7_SA_NS_4lessIS7_EELb1EEENS5_ISA_EEE7destroyEPNS_11__tree_nodeISA_PvEE (; 131 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
   ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/__tree:1836:0
   (if
    ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/__tree:1828:0
@@ -5472,7 +5428,7 @@
    )
   )
  )
- (func $__ZN14BarnesHutNode311place_innerEP6Vertex (; 134 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
+ (func $__ZN14BarnesHutNode311place_innerEP6Vertex (; 132 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
   (local $2 i32)
   (local $3 i32)
   (local $4 i32)
@@ -5543,7 +5499,7 @@
     )
    )
   )
-  ;;@ fourd.cpp:230:0
+  ;;@ fourd.cpp:240:0
   (local.set $1
    (i32.load
     (local.get $2)
@@ -5569,7 +5525,7 @@
    (local.get $2)
   )
  )
- (func $__ZN14BarnesHutNode311place_outerEP6Vertex (; 135 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
+ (func $__ZN14BarnesHutNode311place_outerEP6Vertex (; 133 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
   (local $2 i32)
   (local $3 i32)
   (local $4 i32)
@@ -5591,7 +5547,7 @@
     (i32.const 16)
    )
   )
-  ;;@ fourd.cpp:234:0
+  ;;@ fourd.cpp:244:0
   (local.set $2
    (i32.add
     (local.get $1)
@@ -5603,7 +5559,7 @@
    (local.get $0)
    (local.get $2)
   )
-  ;;@ fourd.cpp:235:0
+  ;;@ fourd.cpp:245:0
   (local.set $4
    (call $__Znwm
     (i32.const 44)
@@ -5634,7 +5590,7 @@
    (local.get $0)
    (local.get $4)
   )
-  ;;@ fourd.cpp:236:0
+  ;;@ fourd.cpp:246:0
   (local.set $0
    (call $__ZNSt3__23mapINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEEP14BarnesHutNode3NS_4lessIS6_EENS4_INS_4pairIKS6_S8_EEEEEixERSC_
     (local.get $2)
@@ -5650,7 +5606,7 @@
    (local.get $0)
    (local.get $1)
   )
-  ;;@ fourd.cpp:237:0
+  ;;@ fourd.cpp:247:0
   (call $__ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEED2Ev
    (local.get $3)
   )
@@ -5658,7 +5614,7 @@
    (local.get $3)
   )
  )
- (func $__ZN14BarnesHutNode310get_octantERN4gmtl3VecIfLj3EEE (; 136 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32)
+ (func $__ZN14BarnesHutNode310get_octantERN4gmtl3VecIfLj3EEE (; 134 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32)
   (local $3 i32)
   (local $4 i32)
   (local $5 i32)
@@ -5709,12 +5665,12 @@
     (i32.const 12)
    )
   )
-  ;;@ fourd.cpp:260:0
+  ;;@ fourd.cpp:270:0
   (call $__ZN14BarnesHutNode36centerEv
    (local.get $5)
    (local.get $1)
   )
-  ;;@ fourd.cpp:261:0
+  ;;@ fourd.cpp:271:0
   (local.set $1
    (call $__ZN4gmtl7VecBaseIfLj3ENS_4meta13DefaultVecTagEEixEj
     (local.get $5)
@@ -5770,7 +5726,7 @@
    (local.get $6)
    (local.get $1)
   )
-  ;;@ fourd.cpp:262:0
+  ;;@ fourd.cpp:272:0
   (local.set $1
    (call $__ZN4gmtl7VecBaseIfLj3ENS_4meta13DefaultVecTagEEixEj
     (local.get $5)
@@ -5826,7 +5782,7 @@
    (local.get $6)
    (local.get $1)
   )
-  ;;@ fourd.cpp:263:0
+  ;;@ fourd.cpp:273:0
   (local.set $1
    (call $__ZN4gmtl7VecBaseIfLj3ENS_4meta13DefaultVecTagEEixEj
     (local.get $5)
@@ -5882,7 +5838,7 @@
    (local.get $2)
    (local.get $1)
   )
-  ;;@ fourd.cpp:264:0
+  ;;@ fourd.cpp:274:0
   (call $__ZNSt3__2plIcNS_11char_traitsIcEENS_9allocatorIcEEEENS_12basic_stringIT_T0_T1_EERKS9_SB_
    (local.get $3)
    (local.get $7)
@@ -5990,11 +5946,11 @@
     (br $while-in)
    )
   )
-  ;;@ fourd.cpp:264:0
+  ;;@ fourd.cpp:274:0
   (call $__ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEED2Ev
    (local.get $3)
   )
-  ;;@ fourd.cpp:265:0
+  ;;@ fourd.cpp:275:0
   (call $__ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEED2Ev
    (local.get $4)
   )
@@ -6008,7 +5964,7 @@
    (local.get $3)
   )
  )
- (func $__ZNSt3__23mapINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEEP14BarnesHutNode3NS_4lessIS6_EENS4_INS_4pairIKS6_S8_EEEEEixERSC_ (; 137 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (result i32)
+ (func $__ZNSt3__23mapINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEEP14BarnesHutNode3NS_4lessIS6_EENS4_INS_4pairIKS6_S8_EEEEEixERSC_ (; 135 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (result i32)
   (local $2 i32)
   (local $3 i32)
   (local $4 i32)
@@ -6073,7 +6029,7 @@
   ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/map:1319:0
   (local.get $0)
  )
- (func $__ZNSt3__2plIcNS_11char_traitsIcEENS_9allocatorIcEEEENS_12basic_stringIT_T0_T1_EERKS9_SB_ (; 138 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32)
+ (func $__ZNSt3__2plIcNS_11char_traitsIcEENS_9allocatorIcEEEENS_12basic_stringIT_T0_T1_EERKS9_SB_ (; 136 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32)
   (local $3 i32)
   (local $4 i32)
   (local $5 i32)
@@ -6247,6 +6203,27 @@
     (local.get $1)
     (local.get $4)
    )
+  )
+ )
+ (func $__ZNSt3__211char_traitsIcE6lengthEPKc (; 137 ;) (; has Stack IR ;) (param $0 i32) (result i32)
+  ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/__string:217:0
+  (local.set $0
+   (call $_strlen
+    (local.get $0)
+   )
+  )
+  (local.get $0)
+ )
+ (func $__ZNSt3__211char_traitsIcE6assignERcRKc (; 138 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
+  ;;@ /home/thwee/Code/fourd.cpp/emsdk/emscripten/1.38.30/system/include/libcxx/__string:208:0
+  (local.set $1
+   (i32.load8_s
+    (local.get $1)
+   )
+  )
+  (i32.store8
+   (local.get $0)
+   (local.get $1)
   )
  )
  (func $__ZNSt3__26__treeINS_12__value_typeINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEEP14BarnesHutNode3EENS_19__map_value_compareIS7_SA_NS_4lessIS7_EELb1EEENS5_ISA_EEE25__emplace_unique_key_argsIS7_JRKNS_21piecewise_construct_tENS_5tupleIJRKS7_EEENSL_IJEEEEEENS_4pairINS_15__tree_iteratorISA_PNS_11__tree_nodeISA_PvEElEEbEERKT_DpOT0_ (; 139 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32)
@@ -9952,7 +9929,7 @@
  (func $__ZN6VertexC2ERKS_ (; 189 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
   (local $2 i32)
   (local $3 i32)
-  ;;@ fourd.cpp:112:0
+  ;;@ fourd.cpp:118:0
   (local.set $2
    (i32.load
     (local.get $1)
@@ -10443,7 +10420,7 @@
   )
  )
  (func $__ZN6VertexD2Ev (; 200 ;) (; has Stack IR ;) (param $0 i32)
-  ;;@ fourd.cpp:112:0
+  ;;@ fourd.cpp:118:0
   (local.set $0
    (i32.add
     (local.get $0)
@@ -10576,7 +10553,7 @@
  )
  (func $__ZN11LayoutGraphC2EP8Settings (; 206 ;) (; has Stack IR ;) (param $0 i32) (param $1 i32)
   (local $2 i32)
-  ;;@ fourd.cpp:296:0
+  ;;@ fourd.cpp:306:0
   (local.set $2
    (i32.add
     (local.get $0)
@@ -10596,21 +10573,21 @@
    (local.get $0)
    (i64.const 0)
   )
-  ;;@ fourd.cpp:296:0
+  ;;@ fourd.cpp:306:0
   (call $__ZN4gmtl3VecIfLj3EEC2Ev
    (local.get $2)
   )
-  ;;@ fourd.cpp:297:0
+  ;;@ fourd.cpp:307:0
   (i32.store
    (local.get $0)
    (i32.const -1)
   )
-  ;;@ fourd.cpp:298:0
+  ;;@ fourd.cpp:308:0
   (i32.store offset=4
    (local.get $0)
    (i32.const -1)
   )
-  ;;@ fourd.cpp:299:0
+  ;;@ fourd.cpp:309:0
   (i32.store offset=32
    (local.get $0)
    (local.get $1)
@@ -11181,7 +11158,7 @@
   (local $2 i32)
   (local $3 i32)
   (local $4 i32)
-  ;;@ fourd.cpp:112:0
+  ;;@ fourd.cpp:118:0
   (local.set $2
    (i32.load
     (local.get $1)
@@ -11251,7 +11228,7 @@
     (br $while-in)
    )
   )
-  ;;@ fourd.cpp:112:0
+  ;;@ fourd.cpp:118:0
   (local.set $0
    (i32.add
     (local.get $0)
