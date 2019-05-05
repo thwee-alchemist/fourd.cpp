@@ -1,5 +1,5 @@
-#ifndef _FOURDTYPE
-#define _FOURDTYPE
+#ifndef FOURDTYPE
+#define FOURDTYPE
 
 enum FourDType {
   VertexType,

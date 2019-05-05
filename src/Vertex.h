@@ -1,0 +1,68 @@
+#ifndef VERTEX
+#define VERTEX
+
+#include "gmtl/Vec.h"
+#include "gmtl/VecOps.h"
+#include "gmtl/gmtl.h"
+#include <vector>
+#include <map>
+#include <set>
+#include <sstream>
+
+#include "Edge.h"
+#include "FourDType.cpp"
+#include "Settings.h"
+
+using namespace std;
+using namespace gmtl;
+
+class Edge;
+
+
+
+float length(gmtl::Vec3f v);
+class Randomator {
+  public:
+  Randomator();
+  float get();
+};
+
+class Vertex {
+  public:
+  Vec3f position;
+  Vec3f velocity;
+  Vec3f acceleration;
+  Vertex* coarser;
+  std::set<Edge*>* edges;
+  int id;
+  FourDType T;
+  Vec3f attraction_forces;
+  Vec3f repulsion_forces;
+
+  Vertex(int);
+  static Vec3f pairwise_repulsion(const Vec3f&, const Vec3f&, Settings*);
+  float get_x() const;
+  float get_y() const;
+  float get_z() const;
+  bool operator==(const Vertex&);
+  string toString();
+};
+
+#endif
+
+/*
+#ifdef __EMSCRIPTEN__
+#include <emscripten/bind.h>
+
+using namespace std;
+using namespace gmtl;
+
+
+EMSCRIPTEN_BINDINGS(Vertex){
+  emscripten::class_<Vertex>("Vertex")
+    .constructor<int>()
+    .property("x", &Vertex::get_x)
+    .property("y", &Vertex::get_y)
+    .property("z", &Vertex::get_z);
+}
+*/

@@ -307,7 +307,7 @@ FourD = function(selector, options, default_settings, LayoutGraph){
   Graph.prototype.add_camera_vertex = function(camera){
     var v = new CameraVertex(this.vertex_id_spawn++, camera);
     v.position = v.object.position;
-    this.V.set(v.id, v);
+    this.V.set(vv.id, v);
     return v;
   };
 
