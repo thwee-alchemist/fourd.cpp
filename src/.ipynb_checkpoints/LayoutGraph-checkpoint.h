@@ -31,8 +31,8 @@ class LayoutGraph {
     Edge* get_e(int i) const;
     long vertex_count() const;
 
-    int vertex_id;
-    int edge_id;
+    int next_vertex_id;
+    int next_edge_id;
     vector<Vertex*> V;
     vector<Edge*> E;
     Settings* settings;

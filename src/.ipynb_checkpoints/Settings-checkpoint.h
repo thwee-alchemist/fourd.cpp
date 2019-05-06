@@ -37,6 +37,8 @@ class Settings{
     float attraction;
     float friction;
     float gravity;
+    
+    static Settings* defaults();
 };
 
 #endif

@@ -11,9 +11,8 @@
 #include "Settings.h"
 
 using namespace std;
-using namespace gmtl;
 
-float length(gmtl::Vec3f v){
+float _length(gmtl::Vec3f v){
   return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 }
 
@@ -41,7 +40,7 @@ Vertex::Vertex(int vertex_id){
 
 gmtl::Vec3f Vertex::pairwise_repulsion(const gmtl::Vec3f& one, const gmtl::Vec3f& other, Settings* settings){
   gmtl::Vec3f diff = one - other;
-  float abs_diff = length(diff);
+  float abs_diff = _length(diff);
   return  (settings->repulsion / 
           ((settings->epsilon + abs_diff)*(settings->epsilon + abs_diff))) * 
           (diff / abs_diff);

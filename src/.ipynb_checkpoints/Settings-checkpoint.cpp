@@ -14,7 +14,7 @@ Settings::Settings(
   attraction = _attraction;
   friction = _friction;
   gravity = _gravity;
-};
+}
 
 float Settings::get_repulsion() const {
   return repulsion;
@@ -62,4 +62,22 @@ float Settings::get_gravity() const {
 
 void Settings::set_gravity(float val){
   gravity = val;
+}
+
+Settings* Settings::defaults(){
+  float _repulsion = 1e3;
+  float _epsilon = 1e-4;
+  float _inner_distance = 9e6;
+  float _attraction = 4e-2;
+  float _friction = 8e-1;
+  float _gravity = 1e1;
+
+  return new Settings(
+    _repulsion, 
+    _epsilon, 
+    _inner_distance,
+    _attraction,
+    _friction,
+    _gravity
+  );
 }

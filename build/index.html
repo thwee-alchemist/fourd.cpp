@@ -172,6 +172,7 @@ var makeCube = async function(fourd, SIZE){
 }
 
 Module.onRuntimeInitialized = _ => {
+  console.dir(Module);
 
   fourd = new FourD(
     document.querySelector('.display'), 
@@ -180,7 +181,7 @@ Module.onRuntimeInitialized = _ => {
       width: 750,
       height: 500,
       background: 0x004477
-    }, 
+    },
     Module.default_settings,
     Module.LayoutGraph
   );

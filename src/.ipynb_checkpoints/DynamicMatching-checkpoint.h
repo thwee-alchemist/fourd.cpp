@@ -28,8 +28,8 @@ class LayoutGraph {
     LayoutGraph();
     LayoutGraph(Settings* _settings);
     int add_vertex();
-    int add_edge(int, int, bool directed=false, float strength=1.0);
-    void remove_vertex(int);
+    int add_edge(int source, int target, bool directed=false, float strength=1.0);
+    void remove_vertex(int vertex_id);
     void remove_edge(int edge_id);
     string layout();
     Vertex* get_v(int i) const;
@@ -57,12 +57,12 @@ class DynamicMatching : public LayoutGraph {
   public:
   priority_queue<Edge*, vector<Edge*>, EdgeComparison>* pq;
 
-  DynamicMatching(Settings*, LayoutGraph*, int);
+  DynamicMatching(Settings* _settings, LayoutGraph* finer, int n);
   int add_vertex(Vertex* v);
   int get_corresponding_edge(int edge_id);
-  int get_corresponding_vertex(Vertex*);
+  int get_corresponding_vertex(Vertex* vertex);
   void add_edge(DMEdge* e);
-  void remove_vertex(int);
+  void remove_vertex(int vertex_id);
   void remove_edge(int edge_id);
   bool depends(DMEdge* e1, DMEdge* e2);
   void match(Edge* e);

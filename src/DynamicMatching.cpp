@@ -1,6 +1,5 @@
 #include "DynamicMatching.h"
 using namespace std;
-using namespace gmtl;
 
 LayoutGraph::LayoutGraph(Settings* _settings){
   vertex_id = -1;
@@ -94,7 +93,7 @@ string LayoutGraph::layout(){
     gmtl::Vec3f attraction = (edge->source->position - edge->target->position) * (-1 * settings->attraction);
     
     if(edge->directed){
-      float distance = length(edge->source->position - edge->target->position);
+      float distance = _length(edge->source->position - edge->target->position);
 
       gmtl::Vec3f gravity(0, settings->gravity, 0);
       attraction += gravity * distance;
@@ -156,17 +155,6 @@ Edge* LayoutGraph::get_e(int i) const {
 long LayoutGraph::vertex_count() const{
   return (long)V.size();
 }
-
-int vertex_id;
-int edge_id;
-vector<Vertex*> V;
-vector<Edge*> E;
-Settings* settings;
-gmtl::Vec3f center;
-FourDType T;
-LayoutGraph* coarser;
-std::map<int, bool> m;
-DynamicMatching* dm;
 
 float LayoutGraph::center_x(){
   return center[0];

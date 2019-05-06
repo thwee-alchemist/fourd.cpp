@@ -1,4 +1,4 @@
-FourD = function(selector, options, default_settings, LayoutGraph){
+FourD = function(selector, options, Settings, LayoutGraph){
   var that = this;
   var CONSTANTS = {
     width: 1000,
@@ -251,7 +251,7 @@ FourD = function(selector, options, default_settings, LayoutGraph){
 
     this.E_by_V = new Map();
 
-    this.settings = default_settings();
+    var s = Settings.instantiate();
     const graph = new LayoutGraph(this.settings);
     this.g = graph;
   };

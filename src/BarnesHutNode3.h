@@ -39,7 +39,11 @@ class BarnesHutNode3 {
     void place_outer(Vertex* vertex);
     void insert(Vertex* vertex);
     string get_octant(gmtl::Vec3f& position);
-    void estimate(Vertex* vertex, gmtl::Vec3f& force, gmtl::Vec3f (*force_fn)(const gmtl::Vec3f& p1, const gmtl::Vec3f& p2, Settings* settings), Settings* settings);
+    void estimate(
+        Vertex* vertex, 
+        gmtl::Vec3f& force, 
+        gmtl::Vec3f (*force_fn)(const gmtl::Vec3f& p1, const gmtl::Vec3f& p2, Settings* settings), 
+        Settings* settings);
     string toString();
     unsigned int size();
 };

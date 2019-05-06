@@ -17,24 +17,6 @@ using namespace gmtl;
 using namespace emscripten;
 
 
-Settings* default_settings(){
-  float _repulsion = 1e3;
-  float _epsilon = 1e-4;
-  float _inner_distance = 9e6;
-  float _attraction = 4e-2;
-  float _friction = 8e-1;
-  float _gravity = 1e1;
-
-  return new Settings(
-    _repulsion, 
-    _epsilon, 
-    _inner_distance,
-    _attraction,
-    _friction,
-    _gravity
-  );
-}
-
 EMSCRIPTEN_BINDINGS(fourd){
   emscripten::class_<Settings>("Settings")
     .constructor<float, float, float, float, float, float>()
@@ -44,7 +26,7 @@ EMSCRIPTEN_BINDINGS(fourd){
     .property("attraction", &Settings::get_attraction, &Settings::set_attraction)
     .property("friction", &Settings::get_friction, &Settings::set_friction)
     .property("gravity", &Settings::get_gravity, &Settings::set_gravity);
-  emscripten::function("default_settings", &default_settings, allow_raw_pointers());
+  emscripten::function("default_settings", &Settings::defaults, allow_raw_pointers());
   emscripten::class_<Vertex>("Vertex")
     .constructor<int>()
     .property("x", &Vertex::get_x)

@@ -17,7 +17,7 @@ bool DMEdge::shares_vertex(DMEdge* e2){
 }
 
 DMEdge::DMEdge(DMVertex* _source, DMVertex* _target, bool _directed, float _strength) : Edge(DMEdge::_id++, (Vertex*) _source, (Vertex*) _target, _directed, _strength){
-    T = DMEdgeType;
-    count = 0;
-    finer = NULL;
-  }
+  T = DMEdgeType;
+  count = 0;
+  finer = NULL;
+}

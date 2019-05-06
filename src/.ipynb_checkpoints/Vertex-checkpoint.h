@@ -17,8 +17,10 @@ using namespace std;
 using namespace gmtl;
 
 class Edge;
-float _length(gmtl::Vec3f);
 
+
+
+float length(gmtl::Vec3f v);
 class Randomator {
   public:
   Randomator();
