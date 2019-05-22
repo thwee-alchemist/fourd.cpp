@@ -13,7 +13,7 @@ class DMEdge : public Edge {
   public:
 
   FourDType T;
-  static int _id;
+  static int new_edge_id;
   Edge* finer;
   int count;
   
@@ -23,9 +23,7 @@ class DMEdge : public Edge {
 };
 
 class EdgeComparison {
-  bool reverse;
   public:
-  EdgeComparison(const bool& _reverse=false);
   bool operator()(const Edge* lhs, const Edge* rhs) const;
 };
 

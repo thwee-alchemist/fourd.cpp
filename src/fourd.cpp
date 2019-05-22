@@ -4,13 +4,14 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten/bind.h>
 
-#include "FourDType.cpp"
-#include "Vertex.cpp"
-#include "Edge.cpp"
-#include "BarnesHutNode3.cpp"
-#include "DMVertex.cpp"
-#include "DMEdge.cpp"
-#include "DynamicMatching.cpp"
+#include "Settings.h"
+#include "FourDType.h"
+#include "Vertex.h"
+#include "Edge.h"
+#include "BarnesHutNode3.h"
+#include "DMVertex.h"
+#include "DMEdge.h"
+#include "DynamicMatching.h"
 
 using namespace std;
 using namespace gmtl;

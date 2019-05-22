@@ -1,10 +1,13 @@
+#ifndef _DMVERTEX
+#define _DMVERTEX
+
 #include "DMVertex.h"
 using namespace std;
 
 /*
   Constructors
 */
-DMVertex::DMVertex(Vertex* _finer) : Vertex(id++){
+DMVertex::DMVertex(Vertex* _finer) : Vertex(new_vertex_id++){
   T = DMVertexType;
   finer = std::set<Vertex*>();
   finer.insert(_finer);
@@ -19,7 +22,7 @@ DMVertex::DMVertex(Vertex* slot1, Vertex* slot2) : Vertex(id++){
 
   if(slot1->T == DMVertexType){
     position = slot1->position;
-    id = slot1->id;
+    this->id = slot1->id;
     return;
   }
   
@@ -50,3 +53,7 @@ bool DMVertex::has(Vertex* vertex){
   
   return false;
 }
+
+int DMVertex::new_vertex_id = 0;
+
+#endif

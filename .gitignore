@@ -11,3 +11,5 @@ bin/*
 a.out
 node_modules/*
 */.ipynb_checkpoins/*
+test-build/*
+

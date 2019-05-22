@@ -21,6 +21,8 @@
 using namespace std;
 using namespace gmtl;
 
+Settings* default_settings();
+
 class DynamicMatching;
 
 class LayoutGraph {

@@ -1,5 +1,35 @@
+#ifndef _DYNAMICMATCHING
+#define _DYNAMICMATCHING
+
 #include "DynamicMatching.h"
 using namespace std;
+
+Settings* default_settings(){
+  float _repulsion = 1e3;
+  float _epsilon = 1e-4;
+  float _inner_distance = 9e6;
+  float _attraction = 4e-2;
+  float _friction = 8e-1;
+  float _gravity = 1e1;
+
+  return new Settings(
+    _repulsion, 
+    _epsilon, 
+    _inner_distance,
+    _attraction,
+    _friction,
+    _gravity
+  );
+}
+
+LayoutGraph::LayoutGraph(){
+  vertex_id = -1;
+  edge_id = -1;
+  settings = default_settings();
+  T = LayoutGraphType;
+  coarser = NULL;
+  m = std::map<int, bool>();
+}
 
 LayoutGraph::LayoutGraph(Settings* _settings){
   vertex_id = -1;
@@ -120,7 +150,7 @@ string LayoutGraph::layout(){
     vertex->acceleration = (vertex->repulsion_forces - vertex->attraction_forces) - friction;
     vertex->velocity += vertex->acceleration;
     vertex->position += vertex->velocity;
-    s << "[" << vertex->id << ",{\"x\":" << vertex->get_x() << ",\"y\":" << vertex->get_y() << ",\"z\":" << vertex->get_z() << "}]";
+    s << "{\"id\":" << vertex->id << ",\"x\":" << vertex->get_x() << ",\"y\":" << vertex->get_y() << ",\"z\":" << vertex->get_z() << "}";
     if(!(vertex == V.back())){
       s << ",";
     }
@@ -402,3 +432,4 @@ float DynamicMatching::complexity(){
   return (float)V.size() / (float)E.size();
 }
 
+#endif

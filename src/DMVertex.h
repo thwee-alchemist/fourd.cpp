@@ -29,7 +29,7 @@ class DMVertex : public Vertex {
   /*
     Static vertex id.
   */
-  static int id;
+  static int new_vertex_id;
 
   /*
     Type information, either Vertex or DMVertex

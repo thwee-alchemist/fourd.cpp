@@ -1,3 +1,10 @@
+
+var Module = (function() {
+  var _scriptDir = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : undefined;
+  return (
+function(Module) {
+  Module = Module || {};
+
 // Copyright 2010 The Emscripten Authors.  All rights reserved.
 // Emscripten is available under two separate licenses, the MIT license and the
 // University of Illinois/NCSA Open Source License.  Both these licenses can be
@@ -20,19 +27,7 @@ var Module = typeof Module !== 'undefined' ? Module : {};
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// Copyright 2013 The Emscripten Authors.  All rights reserved.
-// Emscripten is available under two separate licenses, the MIT license and the
-// University of Illinois/NCSA Open Source License.  Both these licenses can be
-// found in the LICENSE file.
-
-// Route URL GET parameters to argc+argv
-if (typeof window === "object") {
-  Module['arguments'] = window.location.search.substr(1).trim().split('&');
-  // If no args were passed arguments = [''], in which case kill the single empty string.
-  if (!Module['arguments'][0])
-    Module['arguments'] = [];
-}
-
+// {{PRE_JSES}}
 
 // Sometimes an existing Module object exists with properties
 // meant to overwrite the default module functionality. Here
@@ -122,9 +117,7 @@ if (ENVIRONMENT_IS_NODE) {
 
   Module['arguments'] = process['argv'].slice(2);
 
-  if (typeof module !== 'undefined') {
-    module['exports'] = Module;
-  }
+  // MODULARIZE will export the module in the proper place outside, we don't need to export here
 
   process['on']('uncaughtException', function(ex) {
     // suppress ExitStatus exceptions from showing an error
@@ -178,6 +171,11 @@ if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
     scriptDirectory = self.location.href;
   } else if (document.currentScript) { // web
     scriptDirectory = document.currentScript.src;
+  }
+  // When MODULARIZE (and not _INSTANCE), this JS may be executed later, after document.currentScript
+  // is gone, so we saved it, and we use it here instead of any other info.
+  if (_scriptDir) {
+    scriptDirectory = _scriptDir;
   }
   // blob urls look like blob:http://site.com/etc/etc and we cannot infer anything from them.
   // otherwise, slice off the final part of the url to find the script directory.
@@ -1313,11 +1311,11 @@ function updateGlobalBufferViews() {
 
 
 var STATIC_BASE = 1024,
-    STACK_BASE = 6256,
+    STACK_BASE = 14624,
     STACKTOP = STACK_BASE,
-    STACK_MAX = 5249136,
-    DYNAMIC_BASE = 5249136,
-    DYNAMICTOP_PTR = 6000;
+    STACK_MAX = 5257504,
+    DYNAMIC_BASE = 5257504,
+    DYNAMICTOP_PTR = 14592;
 
 assert(STACK_BASE % 16 === 0, 'stack must start aligned');
 assert(DYNAMIC_BASE % 16 === 0, 'heap must start aligned');
@@ -1448,8 +1446,6 @@ function preMain() {
 
 function exitRuntime() {
   checkStackCookie();
-  callRuntimeCallbacks(__ATEXIT__);
-  
   runtimeExited = true;
 }
 
@@ -1478,7 +1474,6 @@ function addOnPreMain(cb) {
 }
 
 function addOnExit(cb) {
-  __ATEXIT__.unshift(cb);
 }
 
 function addOnPostRun(cb) {
@@ -1623,7 +1618,8 @@ var memoryInitializer = null;
 
 
 
-var /* show errors on likely calls to FS when it was not included */ FS = {
+// show errors on likely calls to FS when it was not included
+var FS = {
   error: function() {
     abort('Filesystem support (FS) was not included. The problem is that you are using files from JS, but files were not used from C/C++, so filesystem support was not auto-included. You can force-include filesystem support with  -s FORCE_FILESYSTEM=1');
   },
@@ -1788,12 +1784,15 @@ Module['asm'] = function(global, env, providedBuffer) {
   ;
   // import table
   env['table'] = wasmTable = new WebAssembly.Table({
-    'initial': 30,
-    'maximum': 30,
+    'initial': 32,
+    'maximum': 32,
     'element': 'anyfunc'
   });
+  // With the wasm backend __memory_base and __table_base and only needed for
+  // relocatable output.
   env['__memory_base'] = 1024; // tell the memory segments where to place themselves
-  env['__table_base'] = 0; // table starts at 0 by default (even in dynamic linking, for the main module)
+  // table starts at 0 by default (even in dynamic linking, for the main module)
+  env['__table_base'] = 0;
 
   var exports = createWasm(env);
   assert(exports, 'binaryen setup failed (no wasm support?)');
@@ -1808,8 +1807,8 @@ var ASM_CONSTS = [];
 
 
 
-// STATICTOP = STATIC_BASE + 5232;
-/* global initializers */  __ATINIT__.push({ func: function() { __GLOBAL__sub_I_bind_cpp() } });
+// STATICTOP = STATIC_BASE + 13600;
+/* global initializers */  __ATINIT__.push({ func: function() { __GLOBAL__sub_I_Vertex_cpp() } }, { func: function() { __GLOBAL__sub_I_Edge_cpp() } }, { func: function() { __GLOBAL__sub_I_DMVertex_cpp() } }, { func: function() { __GLOBAL__sub_I_DMEdge_cpp() } }, { func: function() { __GLOBAL__sub_I_BarnesHutNode3_cpp() } }, { func: function() { __GLOBAL__sub_I_DynamicMatching_cpp() } }, { func: function() { __GLOBAL__sub_I_bind_cpp() } });
 
 
 
@@ -1819,7 +1818,7 @@ var ASM_CONSTS = [];
 
 
 /* no memory initializer */
-var tempDoublePtr = 6240
+var tempDoublePtr = 14608
 assert(tempDoublePtr % 8 == 0);
 
 function copyTempFloat(ptr) { // functions, because inlining this code increases code size too much
@@ -1842,6 +1841,10 @@ function copyTempDouble(ptr) {
 
 // {{PRE_LIBRARY}}
 
+
+  function ___assert_fail(condition, filename, line, func) {
+      abort('Assertion failed: ' + UTF8ToString(condition) + ', at: ' + [filename ? UTF8ToString(filename) : 'unknown filename', line, func ? UTF8ToString(func) : 'unknown function']);
+    }
 
   function ___lock() {}
 
@@ -1873,11 +1876,7 @@ function copyTempDouble(ptr) {
   try {
    // llseek
       var stream = SYSCALLS.getStreamFromFD(), offset_high = SYSCALLS.get(), offset_low = SYSCALLS.get(), result = SYSCALLS.get(), whence = SYSCALLS.get();
-      // NOTE: offset_high is unused - Emscripten's off_t is 32-bit
-      var offset = offset_low;
-      FS.llseek(stream, offset, whence);
-      SAFE_HEAP_STORE(((result)|0), ((stream.position)|0), 4);
-      if (stream.getdents && offset === 0 && whence === 0) stream.getdents = null; // reset readdir state
+      abort('it should not be possible to operate on streams when !SYSCALLS_REQUIRE_FILESYSTEM');
       return 0;
     } catch (e) {
     if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
@@ -1896,7 +1895,7 @@ function copyTempDouble(ptr) {
     }function ___syscall146(which, varargs) {SYSCALLS.varargs = varargs;
   try {
    // writev
-      // hack to support printf in FILESYSTEM=0
+      // hack to support printf in SYSCALLS_REQUIRE_FILESYSTEM=0
       var stream = SYSCALLS.get(), iov = SYSCALLS.get(), iovcnt = SYSCALLS.get();
       var ret = 0;
       for (var i = 0; i < iovcnt; i++) {
@@ -1928,7 +1927,7 @@ function copyTempDouble(ptr) {
   try {
    // close
       var stream = SYSCALLS.getStreamFromFD();
-      FS.close(stream);
+      abort('it should not be possible to operate on streams when !SYSCALLS_REQUIRE_FILESYSTEM');
       return 0;
     } catch (e) {
     if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
@@ -2527,21 +2526,28 @@ function copyTempDouble(ptr) {
       size = alignUp(size, PAGE_MULTIPLE); // round up to wasm page size
       var oldSize = buffer.byteLength;
       // native wasm support
+      // note that this is *not* threadsafe. multiple threads can call .grow(), and each
+      // presents a delta, so in theory we may over-allocate here (e.g. if two threads
+      // ask to grow from 256MB to 512MB, we get 2 requests to add +256MB, and may end
+      // up growing to 768MB (even though we may have been able to make do with 512MB).
+      // TODO: consider decreasing the step sizes in emscripten_resize_heap
       try {
         var result = wasmMemory.grow((size - oldSize) / 65536); // .grow() takes a delta compared to the previous size
         if (result !== (-1 | 0)) {
           // success in native wasm memory growth, get the buffer from the memory
-          return buffer = wasmMemory.buffer;
+          buffer = wasmMemory.buffer;
+          return true;
         } else {
-          return null;
+          return false;
         }
       } catch(e) {
         console.error('emscripten_realloc_buffer: Attempted to grow from ' + oldSize  + ' bytes to ' + size + ' bytes, but got error: ' + e);
-        return null;
+        return false;
       }
     }function _emscripten_resize_heap(requestedSize) {
       var oldSize = _emscripten_get_heap_size();
-      assert(requestedSize > oldSize); // This function should only ever be called after the ceiling of the dynamic heap has already been bumped to exceed the current total size of the asm.js heap.
+      // With pthreads, races can happen (another thread might increase the size in between), so return a failure, and let the caller retry.
+      assert(requestedSize > oldSize);
   
   
       var PAGE_MULTIPLE = 65536;
@@ -2555,6 +2561,7 @@ function copyTempDouble(ptr) {
       var MIN_TOTAL_MEMORY = 16777216;
       var newSize = Math.max(oldSize, MIN_TOTAL_MEMORY); // So the loop below will not be infinite, and minimum asm.js memory size is 16MB.
   
+      // TODO: see realloc_buffer - for PTHREADS we may want to decrease these jumps
       while (newSize < requestedSize) { // Keep incrementing the heap size as long as it's less than what is requested.
         if (newSize <= 536870912) {
           newSize = alignUp(2 * newSize, PAGE_MULTIPLE); // Simple heuristic: double until 1GB...
@@ -2570,16 +2577,11 @@ function copyTempDouble(ptr) {
   
       var start = Date.now();
   
-      var replacement = emscripten_realloc_buffer(newSize);
-      if (!replacement || replacement.byteLength != newSize) {
+      if (!emscripten_realloc_buffer(newSize)) {
         err('Failed to grow the heap from ' + oldSize + ' bytes to ' + newSize + ' bytes, not enough memory!');
-        if (replacement) {
-          err('Expected to get back a buffer of size ' + newSize + ' bytes, but instead got back a buffer of size ' + replacement.byteLength);
-        }
         return false;
       }
   
-      // everything worked
       updateGlobalBufferViews();
   
   
@@ -2602,7 +2604,6 @@ function copyTempDouble(ptr) {
       else err('failed to set errno from JS');
       return value;
     } 
-__ATEXIT__.push(flush_NO_FILESYSTEM);;
 embind_init_charCodes();
 BindingError = Module['BindingError'] = extendError(Error, 'BindingError');;
 InternalError = Module['InternalError'] = extendError(Error, 'InternalError');;
@@ -2646,6 +2647,8 @@ function nullFunc_ii(x) { err("Invalid function pointer called with signature 'i
 
 function nullFunc_iiii(x) { err("Invalid function pointer called with signature 'iiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
 
+function nullFunc_jiji(x) { err("Invalid function pointer called with signature 'jiji'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
+
 function nullFunc_vi(x) { err("Invalid function pointer called with signature 'vi'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
 
 function nullFunc_viiii(x) { err("Invalid function pointer called with signature 'viiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
@@ -2666,10 +2669,12 @@ var asmLibraryArg = {
   "ftfault": ftfault,
   "nullFunc_ii": nullFunc_ii,
   "nullFunc_iiii": nullFunc_iiii,
+  "nullFunc_jiji": nullFunc_jiji,
   "nullFunc_vi": nullFunc_vi,
   "nullFunc_viiii": nullFunc_viiii,
   "nullFunc_viiiii": nullFunc_viiiii,
   "nullFunc_viiiiii": nullFunc_viiiiii,
+  "___assert_fail": ___assert_fail,
   "___lock": ___lock,
   "___setErrNo": ___setErrNo,
   "___syscall140": ___syscall140,
@@ -2717,6 +2722,42 @@ var asmLibraryArg = {
 // EMSCRIPTEN_START_ASM
 var asm =Module["asm"]// EMSCRIPTEN_END_ASM
 (asmGlobalArg, asmLibraryArg, buffer);
+
+var real___GLOBAL__sub_I_BarnesHutNode3_cpp = asm["__GLOBAL__sub_I_BarnesHutNode3_cpp"]; asm["__GLOBAL__sub_I_BarnesHutNode3_cpp"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return real___GLOBAL__sub_I_BarnesHutNode3_cpp.apply(null, arguments);
+};
+
+var real___GLOBAL__sub_I_DMEdge_cpp = asm["__GLOBAL__sub_I_DMEdge_cpp"]; asm["__GLOBAL__sub_I_DMEdge_cpp"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return real___GLOBAL__sub_I_DMEdge_cpp.apply(null, arguments);
+};
+
+var real___GLOBAL__sub_I_DMVertex_cpp = asm["__GLOBAL__sub_I_DMVertex_cpp"]; asm["__GLOBAL__sub_I_DMVertex_cpp"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return real___GLOBAL__sub_I_DMVertex_cpp.apply(null, arguments);
+};
+
+var real___GLOBAL__sub_I_DynamicMatching_cpp = asm["__GLOBAL__sub_I_DynamicMatching_cpp"]; asm["__GLOBAL__sub_I_DynamicMatching_cpp"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return real___GLOBAL__sub_I_DynamicMatching_cpp.apply(null, arguments);
+};
+
+var real___GLOBAL__sub_I_Edge_cpp = asm["__GLOBAL__sub_I_Edge_cpp"]; asm["__GLOBAL__sub_I_Edge_cpp"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return real___GLOBAL__sub_I_Edge_cpp.apply(null, arguments);
+};
+
+var real___GLOBAL__sub_I_Vertex_cpp = asm["__GLOBAL__sub_I_Vertex_cpp"]; asm["__GLOBAL__sub_I_Vertex_cpp"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return real___GLOBAL__sub_I_Vertex_cpp.apply(null, arguments);
+};
 
 var real___GLOBAL__sub_I_bind_cpp = asm["__GLOBAL__sub_I_bind_cpp"]; asm["__GLOBAL__sub_I_bind_cpp"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
@@ -2796,6 +2837,30 @@ var real_stackSave = asm["stackSave"]; asm["stackSave"] = function() {
   return real_stackSave.apply(null, arguments);
 };
 Module["asm"] = asm;
+var __GLOBAL__sub_I_BarnesHutNode3_cpp = Module["__GLOBAL__sub_I_BarnesHutNode3_cpp"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["__GLOBAL__sub_I_BarnesHutNode3_cpp"].apply(null, arguments) };
+var __GLOBAL__sub_I_DMEdge_cpp = Module["__GLOBAL__sub_I_DMEdge_cpp"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["__GLOBAL__sub_I_DMEdge_cpp"].apply(null, arguments) };
+var __GLOBAL__sub_I_DMVertex_cpp = Module["__GLOBAL__sub_I_DMVertex_cpp"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["__GLOBAL__sub_I_DMVertex_cpp"].apply(null, arguments) };
+var __GLOBAL__sub_I_DynamicMatching_cpp = Module["__GLOBAL__sub_I_DynamicMatching_cpp"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["__GLOBAL__sub_I_DynamicMatching_cpp"].apply(null, arguments) };
+var __GLOBAL__sub_I_Edge_cpp = Module["__GLOBAL__sub_I_Edge_cpp"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["__GLOBAL__sub_I_Edge_cpp"].apply(null, arguments) };
+var __GLOBAL__sub_I_Vertex_cpp = Module["__GLOBAL__sub_I_Vertex_cpp"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["__GLOBAL__sub_I_Vertex_cpp"].apply(null, arguments) };
 var __GLOBAL__sub_I_bind_cpp = Module["__GLOBAL__sub_I_bind_cpp"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
@@ -2868,6 +2933,10 @@ var dynCall_iiii = Module["dynCall_iiii"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
   return Module["asm"]["dynCall_iiii"].apply(null, arguments) };
+var dynCall_jiji = Module["dynCall_jiji"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["dynCall_jiji"].apply(null, arguments) };
 var dynCall_vi = Module["dynCall_vi"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
@@ -2918,7 +2987,7 @@ if (!Module["stackTrace"]) Module["stackTrace"] = function() { abort("'stackTrac
 if (!Module["addOnPreRun"]) Module["addOnPreRun"] = function() { abort("'addOnPreRun' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Module["addOnInit"]) Module["addOnInit"] = function() { abort("'addOnInit' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Module["addOnPreMain"]) Module["addOnPreMain"] = function() { abort("'addOnPreMain' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
-Module["addOnExit"] = addOnExit;
+if (!Module["addOnExit"]) Module["addOnExit"] = function() { abort("'addOnExit' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Module["addOnPostRun"]) Module["addOnPostRun"] = function() { abort("'addOnPostRun' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Module["writeStringToMemory"]) Module["writeStringToMemory"] = function() { abort("'writeStringToMemory' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Module["writeArrayToMemory"]) Module["writeArrayToMemory"] = function() { abort("'writeArrayToMemory' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
@@ -2959,13 +3028,38 @@ if (!Module["print"]) Module["print"] = function() { abort("'print' was not expo
 if (!Module["printErr"]) Module["printErr"] = function() { abort("'printErr' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Module["getTempRet0"]) Module["getTempRet0"] = function() { abort("'getTempRet0' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Module["setTempRet0"]) Module["setTempRet0"] = function() { abort("'setTempRet0' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
-if (!Module["Pointer_stringify"]) Module["Pointer_stringify"] = function() { abort("'Pointer_stringify' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };if (!Module["ALLOC_NORMAL"]) Object.defineProperty(Module, "ALLOC_NORMAL", { get: function() { abort("'ALLOC_NORMAL' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") } });
+if (!Module["Pointer_stringify"]) Module["Pointer_stringify"] = function() { abort("'Pointer_stringify' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+if (!Module["writeStackCookie"]) Module["writeStackCookie"] = function() { abort("'writeStackCookie' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+if (!Module["checkStackCookie"]) Module["checkStackCookie"] = function() { abort("'checkStackCookie' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+if (!Module["abortStackOverflow"]) Module["abortStackOverflow"] = function() { abort("'abortStackOverflow' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };if (!Module["ALLOC_NORMAL"]) Object.defineProperty(Module, "ALLOC_NORMAL", { get: function() { abort("'ALLOC_NORMAL' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") } });
 if (!Module["ALLOC_STACK"]) Object.defineProperty(Module, "ALLOC_STACK", { get: function() { abort("'ALLOC_STACK' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") } });
 if (!Module["ALLOC_DYNAMIC"]) Object.defineProperty(Module, "ALLOC_DYNAMIC", { get: function() { abort("'ALLOC_DYNAMIC' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") } });
 if (!Module["ALLOC_NONE"]) Object.defineProperty(Module, "ALLOC_NONE", { get: function() { abort("'ALLOC_NONE' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") } });
 
 
 
+// Modularize mode returns a function, which can be called to
+// create instances. The instances provide a then() method,
+// must like a Promise, that receives a callback. The callback
+// is called when the module is ready to run, with the module
+// as a parameter. (Like a Promise, it also returns the module
+// so you can use the output of .then(..)).
+Module['then'] = function(func) {
+  // We may already be ready to run code at this time. if
+  // so, just queue a call to the callback.
+  if (Module['calledRun']) {
+    func(Module);
+  } else {
+    // we are not ready to call then() yet. we must call it
+    // at the same time we would call onRuntimeInitialized.
+    var old = Module['onRuntimeInitialized'];
+    Module['onRuntimeInitialized'] = function() {
+      if (old) old();
+      func(Module);
+    };
+  }
+  return Module;
+};
 
 /**
  * @constructor
@@ -3039,8 +3133,38 @@ function run(args) {
 }
 Module['run'] = run;
 
+function checkUnflushedContent() {
+  // Compiler settings do not allow exiting the runtime, so flushing
+  // the streams is not possible. but in ASSERTIONS mode we check
+  // if there was something to flush, and if so tell the user they
+  // should request that the runtime be exitable.
+  // Normally we would not even include flush() at all, but in ASSERTIONS
+  // builds we do so just for this check, and here we see if there is any
+  // content to flush, that is, we check if there would have been
+  // something a non-ASSERTIONS build would have not seen.
+  // How we flush the streams depends on whether we are in SYSCALLS_REQUIRE_FILESYSTEM=0
+  // mode (which has its own special function for this; otherwise, all
+  // the code is inside libc)
+  var print = out;
+  var printErr = err;
+  var has = false;
+  out = err = function(x) {
+    has = true;
+  }
+  try { // it doesn't matter if it fails
+    var flush = flush_NO_FILESYSTEM;
+    if (flush) flush(0);
+  } catch(e) {}
+  out = print;
+  err = printErr;
+  if (has) {
+    warnOnce('stdio streams had content in them that was not flushed. you should set EXIT_RUNTIME to 1 (see the FAQ), or make sure to emit a newline when you printf etc.');
+    warnOnce('(this may also be due to not including full filesystem support - try building with -s FORCE_FILESYSTEM=1)');
+  }
+}
 
 function exit(status, implicit) {
+  checkUnflushedContent();
 
   // if this is just main exit-ing implicitly, and the status is 0, then we
   // don't need to do anything here and can just leave. if the status is
@@ -3053,7 +3177,7 @@ function exit(status, implicit) {
   if (Module['noExitRuntime']) {
     // if exit() was called, we may warn the user if the runtime isn't actually being shut down
     if (!implicit) {
-      err('exit(' + status + ') called, but noExitRuntime is set due to an async operation, so halting execution but not exiting the runtime or preventing further async execution (you can use emscripten_force_exit, if you want to force a true shutdown)');
+      err('exit(' + status + ') called, but EXIT_RUNTIME is not set, so halting execution but not exiting the runtime or preventing further async execution (build with EXIT_RUNTIME=1, if you want a true shutdown)');
     }
   } else {
 
@@ -3105,6 +3229,7 @@ if (Module['preInit']) {
 }
 
 
+  Module["noExitRuntime"] = true;
 
 run();
 
@@ -3116,67 +3241,16 @@ run();
 
 
 
-// Copyright 2013 The Emscripten Authors.  All rights reserved.
-// Emscripten is available under two separate licenses, the MIT license and the
-// University of Illinois/NCSA Open Source License.  Both these licenses can be
-// found in the LICENSE file.
 
-if (typeof window === "object" && (typeof ENVIRONMENT_IS_PTHREAD === 'undefined' || !ENVIRONMENT_IS_PTHREAD)) {
-  function emrun_register_handlers() {
-    // When C code exit()s, we may still have remaining stdout and stderr messages in flight. In that case, we can't close
-    // the browser until all those XHRs have finished, so the following state variables track that all communication is done,
-    // after which we can close.
-    var emrun_num_post_messages_in_flight = 0;
-    var emrun_should_close_itself = false;
-    function postExit(msg) {
-      var http = new XMLHttpRequest();
-      http.onreadystatechange = function() {
-        if (http.readyState == 4 /*DONE*/) {
-          try {
-            // Try closing the current browser window, since it exit()ed itself. This can shut down the browser process
-            // and emrun does not need to kill the whole browser process.
-            if (typeof window !== 'undefined' && window.close) window.close();
-          } catch(e) {}
-        }
-      }
-      http.open("POST", "stdio.html", true);
-      http.send(msg);
-    }
-    function post(msg) {
-      var http = new XMLHttpRequest();
-      ++emrun_num_post_messages_in_flight;
-      http.onreadystatechange = function() {
-        if (http.readyState == 4 /*DONE*/) {
-          if (--emrun_num_post_messages_in_flight == 0 && emrun_should_close_itself) postExit('^exit^'+EXITSTATUS);
-        }
-      }
-      http.open("POST", "stdio.html", true);
-      http.send(msg);
-    }
-    // If the address contains localhost, or we are running the page from port 6931, we can assume we're running the test runner and should post stdout logs.
-    if (document.URL.search("localhost") != -1 || document.URL.search(":6931/") != -1) {
-      var emrun_http_sequence_number = 1;
-      var prevPrint = out;
-      var prevErr = err;
-      function emrun_exit() { if (emrun_num_post_messages_in_flight == 0) postExit('^exit^'+EXITSTATUS); else emrun_should_close_itself = true; };
-      Module['addOnExit'](emrun_exit);
-      out = function emrun_print(text) { post('^out^'+(emrun_http_sequence_number++)+'^'+encodeURIComponent(text)); prevPrint(text); }
-      err = function emrun_printErr(text) { post('^err^'+(emrun_http_sequence_number++)+'^'+encodeURIComponent(text)); prevErr(text); }
 
-      // Notify emrun web server that this browser has successfully launched the page.
-      post('^pageload^');
-    }
-  }
-
-  // POSTs the given binary data represented as a (typed) array data back to the emrun-based web server.
-  // To use from C code, call e.g. EM_ASM({emrun_file_dump("file.dat", HEAPU8.subarray($0, $0 + $1));}, my_data_pointer, my_data_pointer_byte_length);
-  function emrun_file_dump(filename, data) {
-    var http = new XMLHttpRequest();
-    out('Dumping out file "' + filename + '" with ' + data.length + ' bytes of data.');
-    http.open("POST", "stdio.html?file=" + filename, true);
-    http.send(data); // XXX  this does not work in workers, for some odd reason (issue #2681)
-  }
-
-  if (typeof Module !== 'undefined' && typeof document !== 'undefined') emrun_register_handlers();
+  return Module
 }
-
+);
+})();
+if (typeof exports === 'object' && typeof module === 'object')
+      module.exports = Module;
+    else if (typeof define === 'function' && define['amd'])
+      define([], function() { return Module; });
+    else if (typeof exports === 'object')
+      exports["Module"] = Module;
+    

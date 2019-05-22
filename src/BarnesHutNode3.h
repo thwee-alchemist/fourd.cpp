@@ -1,17 +1,20 @@
-#ifndef BARNESHUTNODE3
-#define BARNESHUTNODE3
+
 
 #include "gmtl/Vec.h"
 #include "gmtl/VecOps.h"
 #include "gmtl/gmtl.h"
 #include <vector>
 #include <map>
-
 #include "Vertex.h"
 #include "Edge.h"
 #include "DMVertex.h"
 #include "DMEdge.h"
 #include "Settings.h"
+
+#ifndef BARNESHUTNODE3
+#define BARNESHUTNODE3
+
+
 
 using namespace std;
 using namespace gmtl;

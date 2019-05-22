@@ -16,8 +16,14 @@ bool DMEdge::shares_vertex(DMEdge* e2){
     || e2->target->id == e2->target->id;
 }
 
-DMEdge::DMEdge(DMVertex* _source, DMVertex* _target, bool _directed, float _strength) : Edge(DMEdge::_id++, (Vertex*) _source, (Vertex*) _target, _directed, _strength){
+DMEdge::DMEdge(DMVertex* _source, DMVertex* _target, bool _directed, float _strength) : Edge(DMEdge::new_edge_id++, (Vertex*) _source, (Vertex*) _target, _directed, _strength){
   T = DMEdgeType;
   count = 0;
   finer = NULL;
 }
+
+int DMEdge::new_edge_id = 0;
+
+bool EdgeComparison::operator()(const Edge* lhs, const Edge* rhs) const{
+  return lhs->order < rhs->order;
+};
