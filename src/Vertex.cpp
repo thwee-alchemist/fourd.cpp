@@ -6,6 +6,7 @@
 #include <map>
 #include <set>
 #include <sstream>
+#include <chrono>
 #include "Vertex.h"
 #include "Edge.h"
 #include "Settings.h"
@@ -21,12 +22,12 @@ Randomator::Randomator(){
 }
 
 float Randomator::get(){
-  return rand() / (RAND_MAX + 1.0f);
+  return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 }
 
 Vertex::Vertex(int vertex_id){
-  Randomator ra;
-  position = gmtl::Vec3f(ra.get(), ra.get(), ra.get());
+
+  position = gmtl::Vec3f(ra->get(), ra->get(), ra->get());
   
   id = vertex_id;
   T = VertexType;
@@ -37,6 +38,7 @@ Vertex::Vertex(int vertex_id){
   coarser = NULL;
   edges = new std::set<Edge*>();
 }
+Randomator* Vertex::ra = new Randomator();
 
 gmtl::Vec3f Vertex::pairwise_repulsion(const gmtl::Vec3f& one, const gmtl::Vec3f& other, Settings* settings){
   gmtl::Vec3f diff = one - other;

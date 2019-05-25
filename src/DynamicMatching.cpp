@@ -2,6 +2,9 @@
 #define _DYNAMICMATCHING
 
 #include "DynamicMatching.h"
+#include "DMVertex.h"
+#include "DMEdge.h"
+
 using namespace std;
 
 Settings* default_settings(){
@@ -11,6 +14,7 @@ Settings* default_settings(){
   float _attraction = 4e-2;
   float _friction = 8e-1;
   float _gravity = 1e1;
+  float _time_dilation = 0.1;
 
   return new Settings(
     _repulsion, 
@@ -18,7 +22,8 @@ Settings* default_settings(){
     _inner_distance,
     _attraction,
     _friction,
-    _gravity
+    _gravity,
+    _time_dilation
   );
 }
 
@@ -28,6 +33,7 @@ LayoutGraph::LayoutGraph(){
   settings = default_settings();
   T = LayoutGraphType;
   coarser = NULL;
+  finer = NULL;
   m = std::map<int, bool>();
 }
 
@@ -38,15 +44,20 @@ LayoutGraph::LayoutGraph(Settings* _settings){
   T = LayoutGraphType;
   coarser = NULL;
   m = std::map<int, bool>();
-  dm = new DynamicMatching(settings, this, 3);
 };
 
 int LayoutGraph::add_vertex(){
-  V.push_back(new Vertex(++vertex_id));
+  Vertex* vertex = new Vertex(++vertex_id);
+  if(coarser != NULL){
+    coarser->add_vertex(new DMVertex(vertex));
+  }
+  V.push_back(vertex);
+
   return vertex_id;
 }
 
 int LayoutGraph::add_edge(int source, int target, bool directed, float strength){
+  cout << "LayoutGraph::add_edge" << endl;
   Vertex* src;
   Vertex* tgt;
   
@@ -59,6 +70,9 @@ int LayoutGraph::add_edge(int source, int target, bool directed, float strength)
     }
   }
   Edge* edge = new Edge(++edge_id, src, tgt, directed, strength);
+  if(coarser != NULL){
+    coarser->add_edge(new DMEdge(edge));
+  }
   E.push_back(edge);
 
   src->edges->insert(edge);
@@ -90,9 +104,13 @@ void LayoutGraph::remove_edge(int edge_id){
   }
 }
 
-string LayoutGraph::layout(){
+/*
+  Output:
+  - An array of Vec3fs. The caller of the function is responsible for 
+    destroying the array.
+*/
+void LayoutGraph::layout(){
   // calculate repulsions
-  
   BarnesHutNode3 tree(settings);
 
   for(Vertex* vertex : this->V){
@@ -136,30 +154,23 @@ string LayoutGraph::layout(){
   }
   
   // update vertices
-  stringstream s;
   gmtl::Vec3f friction;
 
-  s << "[" << endl;
+  if(positions != NULL){
+    delete [] positions;
+    positions = NULL;
+  }
+  positions = new Vec3f[V.size()];
+  int i=0;
   for(Vertex* vertex : V){
     
     friction = vertex->velocity * settings->friction;
 
-    // cout << "vertex (" << vertex->id << ") attraction: " << vertex->attraction_forces << endl;
-    // cout << "vertex (" << vertex->id << ") repulsion : " << vertex->repulsion_forces << endl;
-
     vertex->acceleration = (vertex->repulsion_forces - vertex->attraction_forces) - friction;
     vertex->velocity += vertex->acceleration;
     vertex->position += vertex->velocity;
-    s << "{\"id\":" << vertex->id << ",\"x\":" << vertex->get_x() << ",\"y\":" << vertex->get_y() << ",\"z\":" << vertex->get_z() << "}";
-    if(!(vertex == V.back())){
-      s << ",";
-    }
-    s << endl;
+    positions[i++] = vertex->position;
   }
-
-  s << "]" << endl;
-
-  return s.str();
 }
 
 Vertex* LayoutGraph::get_v(int i) const {
@@ -175,9 +186,12 @@ Vertex* LayoutGraph::get_v(int i) const {
 Edge* LayoutGraph::get_e(int i) const {
   for(Edge* e : E){
     if(e->id == i){
+      cout << "get_e: found " << e->id << endl;
       return e;
     }
   }
+
+  cout << "get_e: found nothing" << endl;
 
   return NULL;
 }
@@ -198,14 +212,19 @@ float LayoutGraph::center_z(){
   return center[2];
 }
 
-DynamicMatching::DynamicMatching(Settings* _settings, LayoutGraph* finer, int n){
+DynamicMatching::DynamicMatching(Settings* _settings, LayoutGraph* _finer, int levels){
   settings = _settings;
   T = DynamicMatchingType;
   pq = new priority_queue<Edge*, vector<Edge*>, EdgeComparison>;
+  finer = _finer;
+  finer->coarser = this;
 
-  if(n > 0){
-    coarser = (LayoutGraph*)new DynamicMatching(_settings, (LayoutGraph*)this, --n);
+  if(levels > 0){
+    coarser = new DynamicMatching(_settings, (LayoutGraph*)this, --levels);
+    coarser->finer = this;
   }
+
+  finer = _finer;
 }
 
 int DynamicMatching::add_vertex(Vertex* v){
@@ -219,13 +238,23 @@ int DynamicMatching::add_vertex(Vertex* v){
   Returns the id of a coarser edge, or creates one.
 */
 int DynamicMatching::get_corresponding_edge(int edge_id){
-  Edge* edge = LayoutGraph::get_e(edge_id);
-  if(edge->coarser != NULL){
-    return ((DMEdge*)edge)->coarser->id;
+  cout << "get_corresponding_edge " << edge_id << endl;
+
+  Edge* edge = get_e(edge_id);
+  if(edge){
+    cout << "found " << edge->id << endl;
+    if(edge->coarser != NULL){
+      return ((DMEdge*)edge)->coarser->id;
+    } 
   }
 
+  cout << "didn't find " << edge_id << endl;
+  edge = finer->get_e(edge_id);
+  if(edge == NULL){
+    return -1;
+  }
+  
   DMEdge* e_prime = new DMEdge((DMVertex*)edge->source, (DMVertex*)edge->target, edge->directed, edge->strength);
-  add_edge(e_prime);
 
   return e_prime->id;
 }
@@ -244,23 +273,27 @@ int DynamicMatching::get_corresponding_vertex(Vertex* vertex){
 }
 
 /*
-
+  "Increase the count of (v1, v2) in E' possibly adding an edge if not already present, add e to the queue."
 */
-void DynamicMatching::add_edge(DMEdge* e){
-  DMVertex* v1_prime = (DMVertex*)LayoutGraph::get_v(get_corresponding_vertex(e->source));
-  DMVertex* v2_prime = (DMVertex*)LayoutGraph::get_v(get_corresponding_vertex(e->target));
+void DynamicMatching::add_edge(Edge* e){
+  cout << "DM::add_edge" << endl;
 
-  int e_prime_id = get_corresponding_edge(e->id);
-  DMEdge* e_prime = (DMEdge*)get_e(e_prime_id);
-  if(e_prime){
-    e_prime->count++;
+  if(e->coarser){
+    cout << "edge has no coarser yet" << endl;
+    ((DMEdge*)e->coarser)->count++;
   }else{
-    e_prime = new DMEdge(v1_prime, v2_prime);
-    add_edge(e_prime);
-
-    pq->push(e_prime);
+    cout << "creating new dmedge" << endl;
+    e->coarser = new DMEdge(e);
+    cout << "created new dmedge" << endl;
+    E.push_back(e->coarser);
+    pq->push(e->coarser);
+    cout << "process queue()" << endl;
     process_queue();
+
+    cout << "processed queue" << endl;
   }
+
+  cout << "DM::add_edge done" << endl;
 }
 
 void DynamicMatching::remove_vertex(int vertex_id){
@@ -316,8 +349,9 @@ bool DynamicMatching::depends(DMEdge* e1, DMEdge* e2){
 }
 
 void DynamicMatching::match(Edge* e){
+  cout << "match " << e->id << endl;
   for(Edge* e2 : E){
-    if(depends((DMEdge*)e, (DMEdge*)e2) && get_v(get_corresponding_edge(e2->id)) != NULL){
+    if(depends((DMEdge*)e, (DMEdge*)e2) && get_e(get_corresponding_edge(e2->id)) != NULL){
       unmatch((DMEdge*)e2);
     }
 
@@ -411,16 +445,26 @@ bool DynamicMatching::match_equation(DMEdge* e){
 }
 
 void DynamicMatching::process_queue(){
+  cout << "process_queue" << endl;
   while(!pq->empty()){
-    Edge* e = pq->top();
+    cout << "still not empty" << endl;
+    DMEdge* e = (DMEdge*)pq->top();
+    cout << "processing edge " << e->id << endl;
     pq->pop();
-    bool _match = match_equation((DMEdge*)e);
+    cout << "determining match_equation for " << e->id << endl;
+    bool _match = match_equation(e);
+    cout << "the match equation yields " << _match << endl;
 
-    if(_match != match_equation((DMEdge*)e)){
-      match((DMEdge*)e);
-    }else{
-      unmatch((DMEdge*)e);
+    bool former_match = m[e->id];
+    if((former_match != m[e->id]) && _match){
+      cout << "matching " << e->id << endl;
+      match(e);
+    }else if((former_match != m[e->id]) && !_match){
+      cout << "unmatching " << e->id << endl;
+      unmatch(e);
     }
+
+    
   }
 }
 
@@ -430,6 +474,30 @@ pair<int, int> DynamicMatching::size(){
 
 float DynamicMatching::complexity(){
   return (float)V.size() / (float)E.size();
+}
+
+void DynamicMatching::layout(){
+  if(coarser){
+    coarser->layout();
+  }else{
+    LayoutGraph::layout();
+  }
+
+  // ^:
+  // This will call the base class's layout function
+  // on its own data, V and E, which are of compatible types. 
+
+  int s = this->V.size();
+  for(int i=0; i<s; i++){
+    DMVertex* dmv = static_cast<DMVertex*>(this->V.at(i));
+    for(int j=0; j<dmv->others.size(); j++){
+      Vertex* v = dmv->others[j];
+      Vec3f displacement = v->acceleration - dmv->acceleration;
+      dmv->others[j]->position = settings->time_dilation * (displacement + dmv->position);
+      // ^: this fetches the finer vertex, and updates it, 
+      //  rather crudely, I suspect, for now...
+    }
+  }
 }
 
 #endif

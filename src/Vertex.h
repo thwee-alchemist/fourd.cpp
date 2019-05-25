@@ -36,6 +36,7 @@ class Vertex {
   FourDType T;
   Vec3f attraction_forces;
   Vec3f repulsion_forces;
+  static Randomator* ra;
 
   Vertex(int);
   static Vec3f pairwise_repulsion(const Vec3f&, const Vec3f&, Settings*);

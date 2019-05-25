@@ -7,7 +7,8 @@ Settings::Settings(
   float _inner_distance, 
   float _attraction, 
   float _friction, 
-  float _gravity){
+  float _gravity,
+  float _time_dilation){
 
   repulsion = _repulsion;
   epsilon = _epsilon;
@@ -15,6 +16,7 @@ Settings::Settings(
   attraction = _attraction;
   friction = _friction;
   gravity = _gravity;
+  time_dilation = _time_dilation;
 };
 
 float Settings::get_repulsion() const {
@@ -63,4 +65,12 @@ float Settings::get_gravity() const {
 
 void Settings::set_gravity(float val){
   gravity = val;
+}
+
+float Settings::get_time_dilation() const {
+  return time_dilation;
+}
+
+void Settings::set_time_dilation(float val){
+  time_dilation = val;
 }
