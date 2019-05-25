@@ -67,7 +67,7 @@ class LayoutGraph {
 };
 
 /*
-
+  DynamicMatching is a LayoutGraph
 */
 class DynamicMatching : public LayoutGraph {
   public:

@@ -7,6 +7,7 @@
 #include <set>
 #include <sstream>
 #include <chrono>
+#include <ctime>
 #include "Vertex.h"
 #include "Edge.h"
 #include "Settings.h"
