@@ -49,7 +49,7 @@ int main(int argc, char** argv){
   cout << "kinetic energy: " << kinetic_energy << endl;
   cout << "average_position" << possum << endl;
 
-  const int NUM_E = NUM_V * 3;
+  const int NUM_E = NUM_V * 2;
 
   for(int i=0; i<NUM_E; i++){
     g->add_edge(rand() % g->V.size(), rand() % g->V.size());
